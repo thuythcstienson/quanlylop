@@ -35,6 +35,7 @@ const ROLE_INFO: Record<UserRole, { label: string; short: string; color: string 
   to_pho: { label: 'Tổ phó (4 Tổ)', short: 'Tổ phó', color: 'bg-teal-100 text-teal-900 border-teal-300' },
   hoc_sinh: { label: 'Học sinh', short: 'Học sinh', color: 'bg-slate-100 text-slate-700 border-slate-200' },
   phu_huynh: { label: 'Phụ huynh', short: 'Phụ huynh', color: 'bg-amber-50 text-amber-900 border-amber-200' },
+  guest: { label: 'Khách xem (Công khai)', short: 'Khách', color: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 const PERMISSION_GROUPS: {
@@ -111,29 +112,18 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   const selectedAccount = data.accounts.find(a => a.id === selectedAccountId);
 
   // Toggle role permission
-  const handleToggleRolePerm = (role: UserRole, key: keyof UserPermissions, isAdminOnly?: boolean) => {
+  const handleToggleRolePerm = (role: UserRole, key: keyof UserPermissions) => {
     // Admin always has all permissions
     if (role === 'admin') return;
 
-    // Strict safety constraint: NEVER allow deletion permissions to non-admin roles
-    if (isAdminOnly && (
-      key === 'canDeletePoints' ||
-      key === 'canDeletePeriodPoints' ||
-      key === 'canDeleteStudents' ||
-      key === 'canDeleteCampaign' ||
-      key === 'canBackupRestore'
-    )) {
-      showToast('Quyền xóa dữ liệu chỉ dành riêng cho Giáo viên chủ nhiệm để đảm bảo an toàn tuyệt đối!', 'warning');
-      return;
-    }
-
     setRolePerms(prev => {
       const currentRoleObj = prev[role] || DEFAULT_ROLE_PERMISSIONS[role];
+      const nextVal = !currentRoleObj[key];
       return {
         ...prev,
         [role]: {
           ...currentRoleObj,
-          [key]: !currentRoleObj[key],
+          [key]: nextVal,
         }
       };
     });
@@ -142,7 +132,32 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   // Reset to pedagogic default
   const handleResetDefaults = () => {
     setRolePerms(JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)));
-    showToast('Đã nạp lại thiết lập phân quyền chuẩn sư phạm!', 'info');
+    showToast('Đã nạp lại thiết lập phân quyền chuẩn sư phạm (Chỉ GVCN xóa & sửa thang điểm)!', 'info');
+  };
+
+  // Apply Full Access Preset for Class Cadres
+  const handleApplyCadreHelperPreset = () => {
+    setRolePerms(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const cadreRoles: UserRole[] = ['lop_truong', 'lop_pho_ht', 'lop_pho_nn', 'lop_pho_vtm'];
+      cadreRoles.forEach(r => {
+        next[r] = {
+          ...next[r],
+          canCreatePoints: true,
+          canReviewPoints: true,
+          canManageStudents: true,
+          canDivideTeams: true,
+          canCreateCampaign: true,
+          canMarkSubmissions: true,
+          canEvaluateStudents: true,
+          canEditCampaign: false,
+          canManageRules: false,
+          canManageAccounts: false,
+        };
+      });
+      return next;
+    });
+    showToast('Đã áp dụng mẫu phân quyền Hỗ Trợ Đắc Lực cho Ban cán sự lớp!', 'success');
   };
 
   // Save role permissions
@@ -158,20 +173,9 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
   };
 
   // Toggle single account custom permission
-  const handleToggleAccountPerm = (key: keyof UserPermissions, isAdminOnly?: boolean) => {
+  const handleToggleAccountPerm = (key: keyof UserPermissions) => {
     if (!selectedAccount) return;
     if (selectedAccount.role === 'admin') return;
-
-    if (isAdminOnly && (
-      key === 'canDeletePoints' ||
-      key === 'canDeletePeriodPoints' ||
-      key === 'canDeleteStudents' ||
-      key === 'canDeleteCampaign' ||
-      key === 'canBackupRestore'
-    )) {
-      showToast('Không thể cấp quyền xóa dữ liệu cho cán sự / học sinh.', 'warning');
-      return;
-    }
 
     const currentEffective = customAccountPerms[key] !== undefined 
       ? customAccountPerms[key] 
@@ -230,24 +234,33 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
           </button>
         </div>
 
-        {/* Safety Warning Callout Banner */}
-        <div className="bg-amber-50/90 border-b border-amber-200 px-4 py-2.5 flex items-center justify-between text-xs text-amber-950">
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+        {/* Safety Callout Banner & Presets */}
+        <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-700">
+            <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
             <span>
-              <strong>Nguyên tắc an toàn dữ liệu:</strong> Ban cán sự (Lớp trưởng, Lớp phó, Tổ trưởng) <strong>không có quyền xóa dữ liệu & xóa thi đua</strong> để đảm bảo an toàn tuyệt đối.
+              <strong>Tùy chọn phân quyền linh hoạt:</strong> Giáo viên chủ nhiệm có toàn quyền bật/tắt bất kỳ quyền hạn nào cho từng vai trò hoặc từng cán sự lớp.
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleApplyCadreHelperPreset}
+              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Cấp các quyền hỗ trợ phong trào, nề nếp, điểm danh cho Lớp trưởng & Lớp phó"
+            >
+              <Sparkles className="w-3 h-3 text-indigo-600" />
+              <span>Mẫu Cán sự Hỗ trợ</span>
+            </button>
             <button
               type="button"
               onClick={handleResetDefaults}
-              className="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-              title="Khôi phục phân quyền mặc định"
+              className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Khôi phục phân quyền chuẩn sư phạm"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>Khôi phục mặc định</span>
+              <RotateCcw className="w-3 h-3 text-slate-500" />
+              <span>Chuẩn Sư phạm (Mặc định)</span>
             </button>
           </div>
         </div>
@@ -327,19 +340,16 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
 
                               {rolesToDisplay.map(r => {
                                 const isAllowed = r === 'admin' ? true : (rolePerms[r]?.[item.key] ?? false);
-                                const isLockedAdminOnly = item.isAdminOnly && r !== 'admin';
 
                                 return (
                                   <td key={r} className="py-2.5 px-2 text-center">
                                     <button
                                       type="button"
-                                      disabled={r === 'admin' || isLockedAdminOnly}
-                                      onClick={() => handleToggleRolePerm(r, item.key, item.isAdminOnly)}
+                                      disabled={r === 'admin'}
+                                      onClick={() => handleToggleRolePerm(r, item.key)}
                                       className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition-all cursor-pointer ${
                                         r === 'admin'
                                           ? 'bg-purple-600 text-white cursor-default shadow-2xs'
-                                          : isLockedAdminOnly
-                                          ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
                                           : isAllowed
                                           ? 'bg-emerald-600 text-white shadow-2xs hover:bg-emerald-700'
                                           : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
@@ -347,8 +357,6 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                       title={
                                         r === 'admin'
                                           ? 'GVCN luôn có toàn quyền'
-                                          : isLockedAdminOnly
-                                          ? 'Chức năng này chỉ GVCN mới được phép sử dụng'
                                           : isAllowed
                                           ? `Bấm để thu hồi quyền ${item.label} của ${ROLE_INFO[r].short}`
                                           : `Bấm để cấp quyền ${item.label} cho ${ROLE_INFO[r].short}`
@@ -356,8 +364,6 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                     >
                                       {r === 'admin' || isAllowed ? (
                                         <Check className="w-4 h-4 font-black" />
-                                      ) : isLockedAdminOnly ? (
-                                        <Lock className="w-3.5 h-3.5 text-slate-300" />
                                       ) : (
                                         <X className="w-3.5 h-3.5" />
                                       )}
@@ -453,33 +459,28 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
                                   ? customAccountPerms[item.key]
                                   : (rolePerms[selectedAccount.role]?.[item.key] ?? DEFAULT_ROLE_PERMISSIONS[selectedAccount.role]?.[item.key] ?? false);
 
-                                const isLocked = item.isAdminOnly;
-
                                 return (
                                   <label
                                     key={item.key}
-                                    className={`p-3 rounded-xl border flex items-start justify-between gap-2 transition-all ${
-                                      isLocked
-                                        ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
-                                        : isAllowed
-                                        ? 'bg-emerald-50/70 border-emerald-300 font-semibold cursor-pointer'
-                                        : 'bg-white border-slate-200 hover:bg-slate-50 cursor-pointer'
+                                    className={`p-3 rounded-xl border flex items-start justify-between gap-2 transition-all cursor-pointer ${
+                                      isAllowed
+                                        ? 'bg-emerald-50/70 border-emerald-300 font-semibold'
+                                        : 'bg-white border-slate-200 hover:bg-slate-50'
                                     }`}
                                   >
                                     <div>
                                       <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
                                         <span>{item.label}</span>
-                                        {item.isAdminOnly && <Lock className="w-3 h-3 text-rose-500" />}
+                                        {item.isAdminOnly && <span className="text-[10px] text-amber-600 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">Đặc quyền</span>}
                                       </div>
                                       <div className="text-[10px] text-slate-500 mt-0.5">{item.desc}</div>
                                     </div>
 
                                     <input
                                       type="checkbox"
-                                      disabled={isLocked}
                                       checked={!!isAllowed}
-                                      onChange={() => handleToggleAccountPerm(item.key, item.isAdminOnly)}
-                                      className="w-4 h-4 text-indigo-600 rounded mt-0.5 cursor-pointer disabled:cursor-not-allowed"
+                                      onChange={() => handleToggleAccountPerm(item.key)}
+                                      className="w-4 h-4 text-indigo-600 rounded mt-0.5 cursor-pointer"
                                     />
                                   </label>
                                 );

@@ -32,8 +32,11 @@ import {
   formatDDMMYYYY 
 } from '../../utils/weekUtils';
 
+import { formatDateVN } from '../../utils/exportUtils';
+import { AccessDeniedView } from '../common/AccessDeniedView';
+
 export const QuickEntryView: React.FC = () => {
-  const { data, currentUser, addTransaction, addRule, getPendingTransactions } = useApp();
+  const { data, currentUser, addTransaction, addRule, getPendingTransactions, hasPermission } = useApp();
 
   const [activeTab, setActiveTab] = useState<PointType>('tru'); // 'tru' | 'cong' | 'bieu_duong'
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -243,6 +246,16 @@ export const QuickEntryView: React.FC = () => {
       }, 1600);
     }
   };
+
+  // Route Guard: Nếu là Khách xem hoặc không có quyền canCreatePoints
+  if (currentUser.role === 'guest' || (!hasPermission('canCreatePoints') && currentUser.role !== 'admin')) {
+    return (
+      <AccessDeniedView 
+        target="Ghi Nhận Điểm Thi Đua Nhanh" 
+        onNavigateHome={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto pb-20 pt-2 px-3 sm:px-4">
@@ -504,7 +517,7 @@ export const QuickEntryView: React.FC = () => {
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
               2. Nội dung / Lý do {activeTab === 'tru' ? 'vi phạm' : activeTab === 'cong' ? 'cộng điểm' : 'biểu dương'}
             </label>
-            {['admin', 'lop_truong', 'lop_pho_ht', 'lop_pho_nn', 'lop_pho_vtm'].includes(currentUser.role) && (
+            {currentUser.role === 'admin' && (
               <button
                 type="button"
                 onClick={() => setShowAddRuleForm(prev => !prev)}
@@ -671,8 +684,8 @@ export const QuickEntryView: React.FC = () => {
               </div>
             </div>
 
-            {/* Option to permanently save this custom reason to class rules */}
-            {customTitle.trim() && (
+            {/* Option to permanently save this custom reason to class rules (Chỉ GVCN) */}
+            {customTitle.trim() && currentUser.role === 'admin' && (
               <label className="flex items-center gap-2 pt-1 text-xs text-indigo-900 font-medium cursor-pointer">
                 <input
                   type="checkbox"
@@ -682,7 +695,7 @@ export const QuickEntryView: React.FC = () => {
                 />
                 <span className="flex items-center gap-1">
                   <BookmarkPlus className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Lưu lý do này thành quy chế dùng chung của lớp (lần sau chỉ cần bấm chọn)</span>
+                  <span>Lưu lý do này thành quy chế dùng chung của lớp (GVCN)</span>
                 </span>
               </label>
             )}

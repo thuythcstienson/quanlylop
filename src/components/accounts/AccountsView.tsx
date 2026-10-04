@@ -24,9 +24,10 @@ import { formatDateVN } from '../../utils/exportUtils';
 import { ProfileEditModal } from '../auth/ProfileEditModal';
 import { PasswordChangeModal } from '../auth/LoginModal';
 import { PermissionsModal } from './PermissionsModal';
+import { AccessDeniedView } from '../common/AccessDeniedView';
 
 export const AccountsView: React.FC = () => {
-  const { data, currentUser, addAccount, toggleLockAccount, changePassword, openConfirm, showToast } = useApp();
+  const { data, currentUser, addAccount, toggleLockAccount, changePassword, openConfirm, showToast, hasPermission } = useApp();
 
   const [activeTab, setActiveTab] = useState<'accounts' | 'audit_log'>('accounts');
 
@@ -34,6 +35,16 @@ export const AccountsView: React.FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPassChangeOpen, setIsPassChangeOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+
+  // Route Guard: Chỉ GVCN hoặc tài khoản được phân quyền mới có thể truy cập Quản lý tài khoản
+  if (currentUser.role !== 'admin' && !hasPermission('canManageAccounts')) {
+    return (
+      <AccessDeniedView 
+        target="Quản Lý Tài Khoản & Phân Quyền" 
+        onNavigateHome={() => window.location.reload()}
+      />
+    );
+  }
 
   // Modal create account
   const [isCreateOpen, setIsCreateOpen] = useState(false);

@@ -24,6 +24,7 @@ import { ExcelImportModal } from './components/students/ExcelImportModal';
 import { LoginModal, PasswordChangeModal } from './components/auth/LoginModal';
 import { ProfileEditModal } from './components/auth/ProfileEditModal';
 import { BackupRestoreModal } from './components/common/BackupRestoreModal';
+import { AccessDeniedView } from './components/common/AccessDeniedView';
 import { 
   CheckCircle2, 
   FileText, 
@@ -38,11 +39,12 @@ import {
   Clock,
   RotateCcw,
   Database,
-  MessageSquare
+  MessageSquare,
+  LogIn
 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
-  const { data, currentUser, getPendingTransactions, resetDemoData, openConfirm } = useApp();
+  const { data, currentUser, getPendingTransactions, resetDemoData, openConfirm, hasPermission } = useApp();
 
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
@@ -85,7 +87,17 @@ const MainLayout: React.FC = () => {
           />
         )}
 
-        {currentView === 'quick-entry' && <QuickEntryView />}
+        {currentView === 'quick-entry' && (
+          (currentUser.role === 'guest' || (!hasPermission('canCreatePoints') && currentUser.role !== 'admin')) ? (
+            <AccessDeniedView 
+              target="Ghi Nhận Điểm Thi Đua Nhanh" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <QuickEntryView />
+          )
+        )}
 
         {currentView === 'competition' && <CompetitionView />}
 
@@ -97,7 +109,17 @@ const MainLayout: React.FC = () => {
           <CommendationView onNavigateToQuickEntry={() => navigateTo('quick-entry')} />
         )}
 
-        {currentView === 'approval' && <ApprovalView />}
+        {currentView === 'approval' && (
+          (currentUser.role !== 'admin' && !hasPermission('canReviewPoints')) ? (
+            <AccessDeniedView 
+              target="Duyệt Điểm Thi Đua" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <ApprovalView />
+          )
+        )}
 
         {currentView === 'campaigns' && <CampaignsView />}
 
@@ -107,9 +129,29 @@ const MainLayout: React.FC = () => {
 
         {currentView === 'announcements' && <AnnouncementsView />}
 
-        {currentView === 'accounts' && <AccountsView />}
+        {currentView === 'accounts' && (
+          (currentUser.role !== 'admin' && !hasPermission('canManageAccounts')) ? (
+            <AccessDeniedView 
+              target="Quản Lý Tài Khoản & Phân Quyền" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <AccountsView />
+          )
+        )}
 
-        {currentView === 'settings' && <SettingsView />}
+        {currentView === 'settings' && (
+          (currentUser.role !== 'admin' && !hasPermission('canManageRules')) ? (
+            <AccessDeniedView 
+              target="Cài Đặt Quy Chế & Thang Điểm" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <SettingsView />
+          )
+        )}
       </main>
 
       {/* Mobile Sticky Bottom Navigation */}
@@ -117,6 +159,7 @@ const MainLayout: React.FC = () => {
         currentView={currentView}
         onNavigate={navigateTo}
         onOpenMenu={() => setIsMobileMenuOpen(true)}
+        onOpenLogin={() => setIsLoginOpen(true)}
       />
 
       {/* Mobile "More" Drawer / Menu Modal */}
@@ -132,6 +175,25 @@ const MainLayout: React.FC = () => {
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
+
+            {currentUser.role === 'guest' && (
+              <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl mb-3 flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-indigo-950 font-bold">Chế độ xem công khai</div>
+                  <div className="text-[11px] text-indigo-600">Đăng nhập tài khoản GVCN hoặc Cán sự để ghi điểm</div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsLoginOpen(true);
+                  }}
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Đăng nhập</span>
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
@@ -157,7 +219,7 @@ const MainLayout: React.FC = () => {
                 <span>Sổ Nhận xét & Đánh giá học sinh</span>
               </button>
 
-              {currentUser.role === 'admin' && (
+              {(currentUser.role === 'admin' || hasPermission('canReviewPoints')) && (
                 <button
                   onClick={() => navigateTo('approval')}
                   className="p-3 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl font-bold flex items-center justify-between cursor-pointer border border-amber-200"
@@ -198,7 +260,7 @@ const MainLayout: React.FC = () => {
                 <span>Thông báo & Zalo</span>
               </button>
 
-              {currentUser.role === 'admin' && (
+              {(currentUser.role === 'admin' || hasPermission('canManageAccounts')) && (
                 <button
                   onClick={() => navigateTo('accounts')}
                   className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-slate-200"
@@ -208,24 +270,28 @@ const MainLayout: React.FC = () => {
                 </button>
               )}
 
-              <button
-                onClick={() => navigateTo('settings')}
-                className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-slate-200"
-              >
-                <Settings className="w-4 h-4 text-slate-600" />
-                <span>Cài đặt quy chế</span>
-              </button>
+              {(currentUser.role === 'admin' || hasPermission('canManageRules')) && (
+                <button
+                  onClick={() => navigateTo('settings')}
+                  className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-slate-200"
+                >
+                  <Settings className="w-4 h-4 text-slate-600" />
+                  <span>Cài đặt quy chế</span>
+                </button>
+              )}
 
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsBackupModalOpen(true);
-                }}
-                className="p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-emerald-200 col-span-2"
-              >
-                <Database className="w-4 h-4 text-emerald-600" />
-                <span>Sao lưu & Khôi phục dữ liệu</span>
-              </button>
+              {(currentUser.role === 'admin' || hasPermission('canBackupRestore')) && (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsBackupModalOpen(true);
+                  }}
+                  className="p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-emerald-200 col-span-2"
+                >
+                  <Database className="w-4 h-4 text-emerald-600" />
+                  <span>Sao lưu & Khôi phục dữ liệu</span>
+                </button>
+              )}
             </div>
 
             {currentUser.role === 'admin' && (

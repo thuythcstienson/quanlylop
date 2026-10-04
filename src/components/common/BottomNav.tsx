@@ -12,12 +12,14 @@ interface BottomNavProps {
   currentView: string;
   onNavigate: (view: string) => void;
   onOpenMenu: () => void;
+  onOpenLogin?: () => void;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   currentView,
   onNavigate,
-  onOpenMenu
+  onOpenMenu,
+  onOpenLogin
 }) => {
   const { data, currentUser, getPendingTransactions } = useApp();
   const pendingCount = getPendingTransactions().length;
@@ -41,7 +43,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
         {/* 2. Nhập nhanh (Prominent for mobile phone cadres!) */}
         <button
-          onClick={() => onNavigate('quick-entry')}
+          onClick={() => {
+            if (currentUser.role === 'guest' && onOpenLogin) {
+              onOpenLogin();
+            } else {
+              onNavigate('quick-entry');
+            }
+          }}
           className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all cursor-pointer ${
             currentView === 'quick-entry'
               ? 'text-white bg-indigo-600 shadow-md font-bold'

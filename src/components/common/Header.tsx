@@ -14,7 +14,9 @@ import {
   User,
   Database,
   Trophy,
-  MessageSquare
+  MessageSquare,
+  LogIn,
+  Settings
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -34,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfileModal,
   onOpenBackupModal
 }) => {
-  const { data, currentUser, switchUserRole, getPendingTransactions, openConfirm, resetDemoData } = useApp();
+  const { data, currentUser, logout, getPendingTransactions, openConfirm, resetDemoData, hasPermission } = useApp();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
   const pendingCount = getPendingTransactions().length;
@@ -53,10 +55,14 @@ export const Header: React.FC<HeaderProps> = ({
         return { label: 'LP Văn thể mỹ', color: 'bg-purple-50 text-purple-700 border-purple-200' };
       case 'to_truong':
         return { label: `Tổ trưởng ${currentUser.teamId ? 'T' + currentUser.teamId : ''}`, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      case 'to_pho':
+        return { label: `Tổ phó ${currentUser.teamId ? 'T' + currentUser.teamId : ''}`, color: 'bg-teal-50 text-teal-700 border-teal-200' };
       case 'hoc_sinh':
         return { label: 'Học sinh', color: 'bg-slate-50 text-slate-700 border-slate-200' };
       case 'phu_huynh':
         return { label: 'Phụ huynh', color: 'bg-teal-50 text-teal-700 border-teal-200' };
+      case 'guest':
+        return { label: 'Khách xem', color: 'bg-slate-100 text-slate-600 border-slate-200' };
       default:
         return { label: 'Cán sự', color: 'bg-slate-50 text-slate-700 border-slate-200' };
     }
@@ -142,17 +148,22 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Tổng quan
           </button>
+
+          {/* Nhập nhanh: nếu chưa đăng nhập thì bấm vào sẽ mở form Đăng nhập */}
           <button
-            onClick={() => onNavigate('quick-entry')}
+            onClick={() => currentUser.role === 'guest' ? onOpenLogin() : onNavigate('quick-entry')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
               currentView === 'quick-entry'
                 ? 'bg-emerald-600 text-white shadow-xs font-bold'
                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
             }`}
+            title={currentUser.role === 'guest' ? 'Đăng nhập để ghi nhận điểm' : 'Ghi nhận điểm nhanh'}
           >
             <Sparkles className="w-4 h-4" />
-            Nhập nhanh
+            <span>Nhập nhanh</span>
+            {currentUser.role === 'guest' && <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-1 rounded">Cần ĐN</span>}
           </button>
+
           <button
             onClick={() => onNavigate('competition')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
@@ -163,6 +174,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Bảng tổng hợp
           </button>
+
           <button
             onClick={() => onNavigate('campaigns')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
@@ -179,6 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
           </button>
+
           <button
             onClick={() => onNavigate('students')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
@@ -189,6 +202,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Học sinh & Tổ
           </button>
+
           <button
             onClick={() => onNavigate('evaluations')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
@@ -200,6 +214,7 @@ export const Header: React.FC<HeaderProps> = ({
             <MessageSquare className="w-4 h-4 text-teal-600" />
             <span>Nhận xét</span>
           </button>
+
           <button
             onClick={() => onNavigate('commendation')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
@@ -210,6 +225,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Biểu dương
           </button>
+
           <button
             onClick={() => onNavigate('reports')}
             className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
@@ -221,7 +237,8 @@ export const Header: React.FC<HeaderProps> = ({
             Báo cáo & Xuất file
           </button>
 
-          {currentUser.role === 'admin' && pendingCount > 0 && (
+          {/* Duyệt điểm: Chỉ hiển thị cho tài khoản có quyền canReviewPoints */}
+          {(currentUser.role === 'admin' || hasPermission('canReviewPoints')) && pendingCount > 0 && (
             <button
               onClick={() => onNavigate('approval')}
               className="relative px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 font-bold hover:bg-amber-100 flex items-center gap-1.5 cursor-pointer animate-pulse"
@@ -232,99 +249,146 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
           )}
+
+          {/* Quản lý tài khoản: Chỉ hiển thị khi được phân quyền canManageAccounts */}
+          {(currentUser.role === 'admin' || hasPermission('canManageAccounts')) && (
+            <button
+              onClick={() => onNavigate('accounts')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+                currentView === 'accounts'
+                  ? 'bg-emerald-50 text-emerald-800 font-bold'
+                  : 'hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <span>Tài khoản</span>
+            </button>
+          )}
+
+          {/* Cài đặt: Chỉ hiển thị khi được phân quyền canManageRules */}
+          {(currentUser.role === 'admin' || hasPermission('canManageRules')) && (
+            <button
+              onClick={() => onNavigate('settings')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+                currentView === 'settings'
+                  ? 'bg-indigo-50 text-indigo-700 font-bold'
+                  : 'hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <Settings className="w-4 h-4 text-slate-600" />
+              <span>Cài đặt</span>
+            </button>
+          )}
         </nav>
 
         {/* User Role Profile & Fast Switcher */}
         <div className="relative flex items-center gap-2">
-          {/* Role Switcher Pill */}
-          <div className="relative">
-            <button
-              onClick={() => setShowRoleMenu(prev => !prev)}
-              className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all text-left cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
-                {currentUser.displayName.charAt(0)}
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px]">
-                  {currentUser.displayName}
-                </div>
-                <div className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-sm border inline-block ${roleInfo.color}`}>
-                  {roleInfo.label}
-                </div>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {/* User Profile Dropdown */}
-            {showRoleMenu && (
-              <div 
-                className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95"
-                onMouseLeave={() => setShowRoleMenu(false)}
+          {currentUser.role === 'guest' ? (
+            /* Guest / Public Mode */
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                <span>Xem công khai</span>
+              </span>
+              <button
+                onClick={onOpenLogin}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
               >
-                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                  <div className="text-[11px] text-slate-400 font-medium">Tài khoản đang đăng nhập:</div>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">{currentUser.displayName}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${roleInfo.color}`}>
-                      {roleInfo.label}
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-mono">@{currentUser.username}</span>
+                <LogIn className="w-4 h-4" />
+                <span>Đăng nhập</span>
+              </button>
+            </div>
+          ) : (
+            /* Logged-in Cadre / Teacher Profile Pill */
+            <div className="relative">
+              <button
+                onClick={() => setShowRoleMenu(prev => !prev)}
+                className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all text-left cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                  {currentUser.displayName.charAt(0)}
+                </div>
+                <div className="hidden sm:block">
+                  <div className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px]">
+                    {currentUser.displayName}
+                  </div>
+                  <div className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-sm border inline-block ${roleInfo.color}`}>
+                    {roleInfo.label}
                   </div>
                 </div>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
 
-                <div className="p-2 space-y-1">
-                  <button
-                    onClick={() => {
-                      setShowRoleMenu(false);
-                      onOpenProfileModal();
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2.5 cursor-pointer transition-colors"
-                  >
-                    <User className="w-4 h-4 text-indigo-600" />
-                    <span>Hồ sơ & Thông tin cá nhân</span>
-                  </button>
+              {/* User Profile Dropdown */}
+              {showRoleMenu && (
+                <div 
+                  className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95"
+                  onMouseLeave={() => setShowRoleMenu(false)}
+                >
+                  <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                    <div className="text-[11px] text-slate-400 font-medium">Tài khoản đang đăng nhập:</div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">{currentUser.displayName}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${roleInfo.color}`}>
+                        {roleInfo.label}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-mono">@{currentUser.username}</span>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => {
-                      setShowRoleMenu(false);
-                      onOpenPasswordModal();
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
-                  >
-                    <KeyRound className="w-4 h-4 text-slate-500" />
-                    <span>Đổi mật khẩu</span>
-                  </button>
-
-                  {currentUser.role === 'admin' && (
+                  <div className="p-2 space-y-1">
                     <button
                       onClick={() => {
                         setShowRoleMenu(false);
-                        onOpenBackupModal();
+                        onOpenProfileModal();
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2.5 cursor-pointer transition-colors"
                     >
-                      <Database className="w-4 h-4 text-emerald-600" />
-                      <span>Sao lưu & Khôi phục dữ liệu</span>
+                      <User className="w-4 h-4 text-indigo-600" />
+                      <span>Hồ sơ & Thông tin cá nhân</span>
                     </button>
-                  )}
 
-                  <div className="border-t border-slate-100 my-1 pt-1">
                     <button
                       onClick={() => {
                         setShowRoleMenu(false);
-                        onOpenLogin();
+                        onOpenPasswordModal();
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
                     >
-                      <LogOut className="w-4 h-4 text-rose-600" />
-                      <span>Đăng xuất / Đổi tài khoản (Đăng nhập)</span>
+                      <KeyRound className="w-4 h-4 text-slate-500" />
+                      <span>Đổi mật khẩu</span>
                     </button>
+
+                    {(currentUser.role === 'admin' || hasPermission('canBackupRestore')) && (
+                      <button
+                        onClick={() => {
+                          setShowRoleMenu(false);
+                          onOpenBackupModal();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+                      >
+                        <Database className="w-4 h-4 text-emerald-600" />
+                        <span>Sao lưu & Khôi phục dữ liệu</span>
+                      </button>
+                    )}
+
+                    <div className="border-t border-slate-100 my-1 pt-1">
+                      <button
+                        onClick={() => {
+                          setShowRoleMenu(false);
+                          logout();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-600" />
+                        <span>Đăng xuất (Về xem công khai)</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>

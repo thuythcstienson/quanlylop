@@ -438,6 +438,22 @@ async function startServer() {
     res.json({ success: true, rule: newRule });
   });
 
+  app.put('/api/rules/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { type, title, points, category, adminName } = req.body;
+    const rule = dbData.rules.find(r => r.id === id);
+    if (!rule) return res.status(404).json({ error: 'Không tìm thấy quy chế.' });
+    
+    if (type) rule.type = type;
+    if (title && title.trim()) rule.title = title.trim();
+    if (points !== undefined) rule.points = Math.abs(Number(points));
+    if (category) rule.category = category;
+    
+    saveDatabase(dbData);
+    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Cập nhật thang điểm', `Chỉnh sửa quy chế: ${rule.title} (${rule.points} điểm)`);
+    res.json({ success: true, rule });
+  });
+
   app.delete('/api/rules/:id', (req: Request, res: Response) => {
     const { id } = req.params;
     const { adminName } = req.body;

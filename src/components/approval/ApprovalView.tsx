@@ -11,10 +11,21 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { formatDateVN } from '../../utils/exportUtils';
+import { AccessDeniedView } from '../common/AccessDeniedView';
 
 export const ApprovalView: React.FC = () => {
-  const { data, currentUser, getPendingTransactions, reviewTransactions, openConfirm } = useApp();
+  const { data, currentUser, getPendingTransactions, reviewTransactions, openConfirm, hasPermission } = useApp();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Route Guard: Chỉ tài khoản có quyền canReviewPoints (GVCN hoặc cán sự được ủy quyền)
+  if (currentUser.role !== 'admin' && !hasPermission('canReviewPoints')) {
+    return (
+      <AccessDeniedView 
+        target="Duyệt Điểm Thi Đua" 
+        onNavigateHome={() => window.location.reload()}
+      />
+    );
+  }
 
   const pendingList = getPendingTransactions();
 

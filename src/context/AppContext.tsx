@@ -15,7 +15,8 @@ import {
   SubmissionStatus,
   StudentEvaluation,
   UserPermissions,
-  DEFAULT_ROLE_PERMISSIONS
+  DEFAULT_ROLE_PERMISSIONS,
+  GUEST_USER
 } from '../types';
 import { INITIAL_APP_DATA } from '../data/initialData';
 
@@ -119,6 +120,7 @@ interface AppContextType {
   bulkImportStudents: (students: Partial<Student>[]) => Promise<number>;
   
   addRule: (rule: Omit<PointRule, 'id'>) => Promise<void>;
+  updateRule: (id: string, updates: Partial<PointRule>) => Promise<void>;
   deleteRule: (id: string) => Promise<void>;
 
   addAccount: (acc: Omit<UserAccount, 'id' | 'createdAt' | 'isLocked'>) => Promise<void>;
@@ -179,17 +181,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default active user is Admin (Cô Thu Thủy) for immediate accessibility
+  // Default active user is Guest (Khách xem công khai) unless previously logged in
   const [currentUser, setCurrentUser] = useState<UserAccount>(() => {
     try {
       const savedUser = localStorage.getItem(SESSION_USER_KEY);
       if (savedUser) {
-        return JSON.parse(savedUser);
+        const parsed = JSON.parse(savedUser);
+        if (parsed && parsed.role && parsed.role !== 'guest') {
+          return parsed;
+        }
       }
     } catch {
       // fallback
     }
-    return INITIAL_APP_DATA.accounts[0];
+    return GUEST_USER;
   });
 
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
@@ -292,18 +297,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logout = () => {
-    // Default back to student view or prompt
-    const guestAcc: UserAccount = {
-      id: 'acc_guest',
-      username: 'khach',
-      passwordHash: '',
-      displayName: 'Khách xem',
-      role: 'hoc_sinh',
-      isLocked: false,
-      createdAt: new Date().toISOString(),
-    };
-    setCurrentUser(guestAcc);
-    showToast('Đã đăng xuất khỏi tài khoản.', 'info');
+    localStorage.removeItem(SESSION_USER_KEY);
+    setCurrentUser(GUEST_USER);
+    showToast('Đã đăng xuất. Bạn đang ở chế độ xem thông tin công khai.', 'info');
   };
 
   const switchUserRole = (roleOrId: string) => {
@@ -917,6 +913,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast(`Đã thêm quy chế: ${rule.title}!`, 'success');
   };
 
+  const updateRule = async (id: string, updates: Partial<PointRule>) => {
+    try {
+      const res = await fetch(`/api/rules/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updates, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          rules: prev.rules.map(r => r.id === id ? { ...r, ...result.rule } : r)
+        }));
+        showToast('Đã cập nhật quy chế thang điểm thành công!', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      rules: prev.rules.map(r => r.id === id ? { ...r, ...updates } : r)
+    }));
+    showToast('Đã cập nhật quy chế thang điểm!', 'success');
+  };
+
   const deleteRule = async (id: string) => {
     try {
       await fetch(`/api/rules/${id}`, {
@@ -1433,24 +1456,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const hasPermission = (permissionKey: keyof UserPermissions, targetUser?: UserAccount): boolean => {
     const user = targetUser || currentUser;
     if (user.role === 'admin') return true;
+    if (user.role === 'guest') return false;
 
-    // Strict safety constraint: NEVER allow deletion permissions for non-admin roles
-    if (
-      permissionKey === 'canDeletePoints' ||
-      permissionKey === 'canDeletePeriodPoints' ||
-      permissionKey === 'canDeleteStudents' ||
-      permissionKey === 'canDeleteCampaign' ||
-      permissionKey === 'canBackupRestore'
-    ) {
-      return false;
-    }
-
-    // Check account-specific override
+    // Check account-specific override configured by teacher
     if (user.permissions && user.permissions[permissionKey] !== undefined) {
       return !!user.permissions[permissionKey];
     }
 
-    // Check role default matrix in config or fallback to DEFAULT_ROLE_PERMISSIONS
+    // Check role configuration matrix set by teacher in config or fallback to DEFAULT_ROLE_PERMISSIONS
     const rolePerms = data.config.rolePermissions?.[user.role] || DEFAULT_ROLE_PERMISSIONS[user.role];
     if (rolePerms && rolePerms[permissionKey] !== undefined) {
       return !!rolePerms[permissionKey];
@@ -1630,6 +1643,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         batchAssignTeam,
         bulkImportStudents,
         addRule,
+        updateRule,
         deleteRule,
         addAccount,
         toggleLockAccount,

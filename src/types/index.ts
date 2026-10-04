@@ -7,7 +7,8 @@ export type UserRole =
   | 'to_truong'      // Tổ trưởng
   | 'to_pho'         // Tổ phó
   | 'hoc_sinh'       // Học sinh
-  | 'phu_huynh';     // Phụ huynh
+  | 'phu_huynh'      // Phụ huynh
+  | 'guest';         // Khách xem (Chưa đăng nhập)
 
 export interface UserPermissions {
   // Thi đua & Điểm số
@@ -56,6 +57,17 @@ export interface UserAccount {
   createdAt: string;
   lastLogin?: string;
 }
+
+export const GUEST_USER: UserAccount = {
+  id: 'guest',
+  username: 'khach',
+  passwordHash: '',
+  displayName: 'Khách xem',
+  role: 'guest',
+  isLocked: false,
+  title: 'Xem công khai',
+  createdAt: '2026-09-01T00:00:00Z',
+};
 
 export type Gender = 'Nam' | 'Nữ';
 
@@ -291,6 +303,26 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canBackupRestore: false,
   },
   phu_huynh: {
+    canCreatePoints: false,
+    canReviewPoints: false,
+    canDeletePoints: false,
+    canDeletePeriodPoints: false,
+    canManageStudents: false,
+    canDeleteStudents: false,
+    canAppointOfficers: false,
+    canDivideTeams: false,
+    canCreateCampaign: false,
+    canEditCampaign: false,
+    canDeleteCampaign: false,
+    canMarkSubmissions: false,
+    canApplyCampaignPoints: false,
+    canEvaluateStudents: false,
+    canDeleteEvaluation: false,
+    canManageRules: false,
+    canManageAccounts: false,
+    canBackupRestore: false,
+  },
+  guest: {
     canCreatePoints: false,
     canReviewPoints: false,
     canDeletePoints: false,

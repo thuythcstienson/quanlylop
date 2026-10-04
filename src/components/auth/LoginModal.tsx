@@ -105,10 +105,45 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </button>
         </form>
 
-        <div className="mt-4 pt-3 border-t border-slate-100 text-center text-xs text-slate-500">
-          <div>Hệ thống bảo mật quản lý thi đua Lớp 9A1.</div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Vui lòng nhập đúng Tên đăng nhập và Mật khẩu được cấp bởi Giáo viên chủ nhiệm.
+        {/* Quick select demo accounts for testing */}
+        <div className="mt-4 pt-3 border-t border-slate-100">
+          <div className="text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">
+            Chọn nhanh tài khoản để đăng nhập:
+          </div>
+          <div className="flex flex-wrap gap-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('admin');
+                setPassword('123456');
+              }}
+              className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg font-bold border border-purple-200 cursor-pointer transition-colors"
+            >
+              👩‍🏫 Cô Thu Thủy (GVCN)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('loptruong');
+                setPassword('123456');
+              }}
+              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg font-bold border border-blue-200 cursor-pointer transition-colors"
+            >
+              👦 Đức Minh (Lớp trưởng)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('totruong1');
+                setPassword('123456');
+              }}
+              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold border border-emerald-200 cursor-pointer transition-colors"
+            >
+              👧 Thị Mai (Tổ trưởng 1)
+            </button>
+          </div>
+          <div className="text-[11px] text-slate-400 mt-2 text-center">
+            Mật khẩu mặc định hệ thống: <strong className="font-mono text-slate-600">123456</strong>
           </div>
         </div>
       </div>
