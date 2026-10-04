@@ -161,9 +161,10 @@ export const QuickEntryView: React.FC = () => {
     }
   };
 
-  // Quick add a new rule permanently to data.rules
+  // Quick add a new rule permanently to data.rules (Chỉ dành riêng cho GVCN)
   const handleQuickAddRule = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentUser.role !== 'admin') return;
     if (!newQuickRuleTitle.trim()) return;
 
     await addRule({
@@ -191,8 +192,8 @@ export const QuickEntryView: React.FC = () => {
 
     const student = data.students.find(s => s.id === selectedStudentId);
 
-    // If user checked "Save this custom reason into class rules list"
-    if (saveAsNewRule && customTitle.trim()) {
+    // If user checked "Save this custom reason into class rules list" (Chỉ GVCN)
+    if (saveAsNewRule && customTitle.trim() && currentUser.role === 'admin') {
       try {
         await addRule({
           type: activeTab,

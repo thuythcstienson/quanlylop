@@ -500,6 +500,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Delete transaction
   const deleteTransaction = async (id: string) => {
+    if (currentUser.role !== 'admin' && !hasPermission('canDeletePoints')) {
+      showToast('Chỉ Giáo viên chủ nhiệm (hoặc tài khoản được phân quyền) mới có quyền xóa lượt điểm này!', 'error');
+      return;
+    }
+
     try {
       await fetch(`/api/transactions/${id}`, {
         method: 'DELETE',
@@ -887,8 +892,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return added.length;
   };
 
-  // Rule CRUD
+  // Rule CRUD - Chỉ dành riêng cho Giáo viên chủ nhiệm (admin)
   const addRule = async (rule: Omit<PointRule, 'id'>) => {
+    if (currentUser.role !== 'admin') {
+      showToast('Chỉ Giáo viên chủ nhiệm mới có quyền thêm nội dung quy chế điểm!', 'error');
+      return;
+    }
+
     try {
       const res = await fetch('/api/rules', {
         method: 'POST',
@@ -914,6 +924,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateRule = async (id: string, updates: Partial<PointRule>) => {
+    if (currentUser.role !== 'admin') {
+      showToast('Chỉ Giáo viên chủ nhiệm mới có quyền chỉnh sửa thang điểm!', 'error');
+      return;
+    }
+
     try {
       const res = await fetch(`/api/rules/${id}`, {
         method: 'PUT',
@@ -941,6 +956,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteRule = async (id: string) => {
+    if (currentUser.role !== 'admin') {
+      showToast('Chỉ Giáo viên chủ nhiệm mới có quyền xóa quy chế thang điểm!', 'error');
+      return;
+    }
+
     try {
       await fetch(`/api/rules/${id}`, {
         method: 'DELETE',
@@ -1330,6 +1350,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Clear Competition Period (Xóa thi đua theo Tuần / Tháng)
   const clearPeriodTransactions = async (type: 'week' | 'month', value: number): Promise<number> => {
+    if (currentUser.role !== 'admin' && !hasPermission('canDeletePeriodPoints')) {
+      showToast('Chỉ Giáo viên chủ nhiệm (hoặc tài khoản được phân quyền xóa kỳ thi đua) mới có quyền thực hiện!', 'error');
+      return 0;
+    }
+
     let deletedCount = 0;
     try {
       const res = await fetch('/api/transactions/clear-period', {

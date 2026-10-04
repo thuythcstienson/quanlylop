@@ -160,6 +160,56 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
     showToast('Đã áp dụng mẫu phân quyền Hỗ Trợ Đắc Lực cho Ban cán sự lớp!', 'success');
   };
 
+  // Grant ALL permissions to Class Cadres
+  const handleApplyCadreAllPermissions = () => {
+    setRolePerms(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const cadreRoles: UserRole[] = ['lop_truong', 'lop_pho_ht', 'lop_pho_nn', 'lop_pho_vtm', 'to_truong', 'to_pho'];
+      const allKeys: (keyof UserPermissions)[] = [
+        'canCreatePoints',
+        'canReviewPoints',
+        'canDeletePoints',
+        'canDeletePeriodPoints',
+        'canManageStudents',
+        'canDivideTeams',
+        'canAppointOfficers',
+        'canDeleteStudents',
+        'canCreateCampaign',
+        'canMarkSubmissions',
+        'canEditCampaign',
+        'canApplyCampaignPoints',
+        'canDeleteCampaign',
+        'canEvaluateStudents',
+        'canDeleteEvaluation',
+        'canManageRules',
+        'canManageAccounts',
+        'canBackupRestore'
+      ];
+      cadreRoles.forEach(r => {
+        allKeys.forEach(k => {
+          next[r][k] = true;
+        });
+      });
+      return next;
+    });
+    showToast('Đã cấp TẤT CẢ các quyền cho Ban cán sự lớp!', 'success');
+  };
+
+  // Revoke all permissions from Cadres
+  const handleRevokeAllCadrePermissions = () => {
+    setRolePerms(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const cadreRoles: UserRole[] = ['lop_truong', 'lop_pho_ht', 'lop_pho_nn', 'lop_pho_vtm', 'to_truong', 'to_pho', 'hoc_sinh'];
+      cadreRoles.forEach(r => {
+        Object.keys(next[r]).forEach(k => {
+          (next[r] as any)[k] = false;
+        });
+      });
+      return next;
+    });
+    showToast('Đã thu hồi toàn bộ quyền của Ban cán sự lớp!', 'info');
+  };
+
   // Save role permissions
   const handleSaveRolePermissions = async () => {
     await updateRolePermissions(rolePerms);
@@ -243,7 +293,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={handleApplyCadreHelperPreset}
@@ -251,7 +301,25 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
               title="Cấp các quyền hỗ trợ phong trào, nề nếp, điểm danh cho Lớp trưởng & Lớp phó"
             >
               <Sparkles className="w-3 h-3 text-indigo-600" />
-              <span>Mẫu Cán sự Hỗ trợ</span>
+              <span>Cán sự Hỗ trợ</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleApplyCadreAllPermissions}
+              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Bật tất cả các quyền cho Ban cán sự lớp"
+            >
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span>Cán sự Toàn quyền (Tất cả quyền)</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleRevokeAllCadrePermissions}
+              className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Thu hồi toàn bộ quyền của Ban cán sự lớp"
+            >
+              <X className="w-3 h-3 text-rose-600" />
+              <span>Thu hồi tất cả</span>
             </button>
             <button
               type="button"
@@ -260,7 +328,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ isOpen, onCl
               title="Khôi phục phân quyền chuẩn sư phạm"
             >
               <RotateCcw className="w-3 h-3 text-slate-500" />
-              <span>Chuẩn Sư phạm (Mặc định)</span>
+              <span>Chuẩn Sư phạm</span>
             </button>
           </div>
         </div>

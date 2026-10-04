@@ -529,7 +529,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* SECTION 3: XÓA DỮ LIỆU THI ĐUA THEO TUẦN / THÁNG */}
-      {['admin', 'lop_truong'].includes(currentUser.role) && (
+      {(currentUser.role === 'admin' || hasPermission('canDeletePeriodPoints')) && (
         <div className="bg-white rounded-2xl border border-rose-200 p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-rose-100 pb-3">
             <h3 className="font-bold text-rose-950 text-sm uppercase tracking-wider flex items-center gap-2">
