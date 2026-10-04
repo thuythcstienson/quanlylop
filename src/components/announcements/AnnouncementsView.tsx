@@ -10,7 +10,8 @@ import {
   MessageSquare, 
   UserCheck, 
   PlusCircle, 
-  X 
+  X,
+  ShieldAlert
 } from 'lucide-react';
 import { formatDateVN } from '../../utils/exportUtils';
 
@@ -55,15 +56,34 @@ export const AnnouncementsView: React.FC = () => {
       .slice(0, 3)
       .join(', ');
 
+    const rankText = data.config.schoolRank 
+      ? `• Thứ hạng lớp toàn trường: Thứ ${data.config.schoolRank}${data.config.schoolTotalClasses ? `/${data.config.schoolTotalClasses}` : ''} toàn trường\n` 
+      : '';
+
     return `[THCS VÂN HÀ 2 - LỚP 9A1]
 Kính gửi Phụ huynh em: ${s.name} (Tổ ${s.teamId})
-GVCN: Cô ${data.config.teacherName} xin gửi kết quả rèn luyện Tuần ${week}:
-• Điểm thi đua: ${studentScore.currentPoints} điểm (Xếp loại: ${studentScore.rankTitle})
+GVCN: Thầy Nguyễn Văn Thủy xin gửi kết quả rèn luyện Tuần ${week}:
+${rankText}• Điểm thi đua: ${studentScore.currentPoints} điểm (Xếp loại: ${studentScore.rankTitle})
 • Điểm cộng/Biểu dương: ${praises ? praises : 'Duy trì tốt'}
 • Lỗi cần đôn đốc: ${warnings ? warnings : 'Không vi phạm, chấp hành rất tốt'}
 • Nhận xét của GVCN: ${customParentNote}
 Kính mong Quý Phụ huynh phối hợp cùng nhà trường đôn đốc các con! Trân trọng.`;
   }, [studentScore, data.config, customParentNote]);
+
+  // BỎ QUYỀN TRUY CẬP: Chỉ Giáo viên chủ nhiệm mới có quyền xem & thao tác Thông báo và Tin nhắn phụ huynh
+  if (currentUser.role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-3xl border border-rose-200 shadow-xl text-center space-y-4">
+        <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <h3 className="font-bold text-slate-800 text-lg">Không có quyền truy cập</h3>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Chức năng Thông báo & Soạn tin nhắn gửi Phụ huynh chỉ dành riêng cho Giáo viên chủ nhiệm. Ban cán sự và học sinh không có quyền truy cập chức năng này.
+        </p>
+      </div>
+    );
+  }
 
   const handleCopyMessage = () => {
     navigator.clipboard.writeText(generatedParentMessage);

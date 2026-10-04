@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Users, 
@@ -18,7 +18,11 @@ import {
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  LogIn
+  LogIn,
+  Edit3,
+  X,
+  Medal,
+  Flag
 } from 'lucide-react';
 import { exportMultiSheetExcel, exportToWordDoc } from '../../utils/exportUtils';
 
@@ -38,6 +42,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     getStudentLeaderboard, 
     getTodayStats, 
     getPendingTransactions,
+    updateConfig,
     showToast
   } = useApp();
 
@@ -59,6 +64,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const avgClassPoints = allStudentScores.length > 0
     ? (allStudentScores.reduce((acc, curr) => acc + curr.currentPoints, 0) / allStudentScores.length).toFixed(1)
     : '100.0';
+
+  // School Rank Tracking State (Thứ tự của lớp trong toàn trường)
+  const [isRankModalOpen, setIsRankModalOpen] = useState(false);
+  const [rankInput, setRankInput] = useState<number | string>(data.config.schoolRank ?? 1);
+  const [totalClassesInput, setTotalClassesInput] = useState<number | string>(data.config.schoolTotalClasses ?? 24);
+  const [isSavingRank, setIsSavingRank] = useState(false);
+
+  const handleSaveSchoolRank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingRank(true);
+    await updateConfig({
+      schoolRank: Number(rankInput) || 1,
+      schoolTotalClasses: Number(totalClassesInput) || 24,
+    });
+    setIsSavingRank(false);
+    setIsRankModalOpen(false);
+    showToast(`Đã lưu thứ tự lớp toàn trường: Hạng ${rankInput}/${totalClassesInput}`, 'success');
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 pb-24 space-y-6">
@@ -125,16 +148,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Quick KPI stats pill row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/10 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mt-6 pt-5 border-t border-white/10 text-center">
           <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3">
             <div className="text-xs text-indigo-200 font-medium">Sĩ số lớp</div>
             <div className="text-2xl sm:text-3xl font-black mt-0.5">{data.students.length}</div>
             <div className="text-[11px] text-indigo-200">4 tổ thi đua</div>
           </div>
 
+          {/* Thứ tự lớp toàn trường */}
+          <div 
+            onClick={() => currentUser.role === 'admin' ? setIsRankModalOpen(true) : null}
+            className={`bg-white/10 backdrop-blur-xs rounded-2xl p-3 transition-all relative ${
+              currentUser.role === 'admin' ? 'hover:bg-white/20 cursor-pointer group' : ''
+            }`}
+            title={currentUser.role === 'admin' ? 'Bấm để cập nhật thứ tự của lớp trong toàn trường' : undefined}
+          >
+            <div className="text-xs text-indigo-200 font-medium flex items-center justify-center gap-1">
+              <span>Hạng toàn trường</span>
+              {currentUser.role === 'admin' && (
+                <Edit3 className="w-3 h-3 text-amber-300 opacity-70 group-hover:opacity-100" />
+              )}
+            </div>
+            <div className="text-2xl sm:text-3xl font-black mt-0.5 text-amber-300 flex items-center justify-center gap-1">
+              <span>Hạng {data.config.schoolRank ?? 1}</span>
+            </div>
+            <div className="text-[11px] text-indigo-200">
+              {data.config.schoolTotalClasses ? `Trên ${data.config.schoolTotalClasses} lớp` : 'Toàn trường'}
+            </div>
+          </div>
+
           <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3">
             <div className="text-xs text-indigo-200 font-medium">Điểm TB Lớp</div>
-            <div className="text-2xl sm:text-3xl font-black mt-0.5 text-amber-300">{avgClassPoints}</div>
+            <div className="text-2xl sm:text-3xl font-black mt-0.5 text-emerald-300">{avgClassPoints}</div>
             <div className="text-[11px] text-indigo-200">Gốc: {data.config.basePoints} điểm</div>
           </div>
 
@@ -146,7 +191,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="text-[11px] text-indigo-200">{todayStats.todayCount} lượt đánh giá</div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3">
+          <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 col-span-2 sm:col-span-1">
             <div className="text-xs text-indigo-200 font-medium">Chờ duyệt</div>
             <div className="text-2xl sm:text-3xl font-black mt-0.5 text-rose-300">
               {pendingTransactions.length}
@@ -320,17 +365,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-[10px] text-slate-500">Chuẩn mẫu Bộ GD</span>
           </button>
 
-          {/* 11. Thông báo */}
-          <button
-            onClick={() => onNavigate('announcements')}
-            className="p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-2xs hover:shadow-sm text-left flex flex-col items-center justify-center text-center transition-all group cursor-pointer"
-          >
-            <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <Bell className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-slate-800">THÔNG BÁO</span>
-            <span className="text-[10px] text-slate-500">Gửi phụ huynh</span>
-          </button>
+          {/* 11. Thông báo: Chỉ hiển thị cho Giáo viên chủ nhiệm */}
+          {currentUser.role === 'admin' && (
+            <button
+              onClick={() => onNavigate('announcements')}
+              className="p-3.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-2xs hover:shadow-sm text-left flex flex-col items-center justify-center text-center transition-all group cursor-pointer"
+            >
+              <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <Bell className="w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold text-slate-800">THÔNG BÁO</span>
+              <span className="text-[10px] text-slate-500">Gửi phụ huynh</span>
+            </button>
+          )}
 
           {/* 12. Tài khoản / Cài đặt */}
           <button
@@ -481,12 +528,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Bell className="w-4 h-4 text-indigo-600" />
                 <span>Thông Báo Lớp Mới</span>
               </h4>
-              <button
-                onClick={() => onNavigate('announcements')}
-                className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
-              >
-                Tất cả
-              </button>
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={() => onNavigate('announcements')}
+                  className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+                >
+                  Tất cả
+                </button>
+              )}
             </div>
 
             {data.announcements.length > 0 ? (
@@ -501,6 +550,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             ) : (
               <div className="text-xs text-slate-400 italic">Chưa có thông báo nào.</div>
             )}
+          </div>
+
+          {/* School Rank Card Widget */}
+          <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 rounded-2xl p-4 text-white shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/20 backdrop-blur-xs rounded-full text-[10px] font-bold">
+                <Medal className="w-3 h-3 text-amber-200" />
+                <span>Thi Đua Toàn Trường</span>
+              </div>
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={() => setIsRankModalOpen(true)}
+                  className="text-[11px] font-bold text-amber-100 hover:text-white underline cursor-pointer flex items-center gap-1"
+                >
+                  <Edit3 className="w-3 h-3" /> Nhập thứ tự
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-black tracking-tight text-white">
+                Hạng {data.config.schoolRank ?? 1}
+              </span>
+              <span className="text-xs text-amber-100 font-semibold">
+                / {data.config.schoolTotalClasses ?? 24} lớp toàn trường
+              </span>
+            </div>
+
+            <p className="text-xs text-amber-100 mt-1.5 leading-snug">
+              {Number(data.config.schoolRank) === 1
+                ? 'Xuất sắc! Lớp 9A1 đang dẫn đầu phong trào thi đua toàn trường.'
+                : Number(data.config.schoolRank) <= 3
+                ? 'Tuyệt vời! Lớp 9A1 thuộc Top 3 lớp thi đua tốt nhất trường.'
+                : `Lớp 9A1 đang xếp thứ ${data.config.schoolRank} trong toàn trường.`}
+            </p>
           </div>
 
           {/* Active Campaigns Widget */}
@@ -660,6 +744,94 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* MODAL: NHẬP VÀ CẬP NHẬT THỨ TỰ LỚP TOÀN TRƯỜNG */}
+      {isRankModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <Medal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Thứ Tự Lớp Toàn Trường</h3>
+                  <p className="text-xs text-slate-500">Thi đua cấp trường THCS Vân Hà 2</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRankModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSchoolRank} className="space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 text-xs leading-relaxed">
+                Thứ tự của lớp trong toàn trường được cập nhật định kỳ sau các buổi chào cờ / đánh giá tuần để theo dõi vị trí thi đua của lớp 9A1 và đính kèm vào tin nhắn báo cáo gửi phụ huynh.
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5 uppercase tracking-wider text-[11px]">
+                  Thứ tự / Xếp hạng lớp trong toàn trường *
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    value={rankInput}
+                    onChange={(e) => setRankInput(e.target.value)}
+                    placeholder="VD: 1 (Hạng nhất), 2 (Hạng nhì)..."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-900 text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                    Hạng {rankInput || '?'}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1.5 uppercase tracking-wider text-[11px]">
+                  Tổng số lớp toàn trường
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={totalClassesInput}
+                  onChange={(e) => setTotalClassesInput(e.target.value)}
+                  placeholder="VD: 24"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Hiển thị dạng: <strong>Hạng {rankInput || 1}/{totalClassesInput || 24}</strong> toàn trường.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsRankModalOpen(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingRank}
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold shadow-md cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Medal className="w-4 h-4" />
+                  <span>{isSavingRank ? 'Đang lưu...' : 'Lưu Thứ Hạng'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

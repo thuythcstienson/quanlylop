@@ -133,9 +133,11 @@ interface AppContextType {
   // Campaigns & Competitions (Cuộc thi & Chiến dịch)
   createCampaign: (params: Omit<Campaign, 'id' | 'createdAt' | 'pointsApplied' | 'participants'> & { participants?: CampaignParticipant[] }) => Promise<Campaign | null>;
   updateCampaign: (id: string, updates: Partial<Campaign>) => Promise<boolean>;
-  updateCampaignParticipant: (campaignId: string, studentId: string, status: SubmissionStatus, note?: string) => Promise<boolean>;
-  batchUpdateParticipants: (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string) => Promise<boolean>;
+  updateCampaignParticipant: (campaignId: string, studentId: string, status: SubmissionStatus, note?: string, extra?: { customPoints?: number; appliedDirectly?: boolean; transactionId?: string; pointsAwarded?: number }) => Promise<boolean>;
+  batchUpdateParticipants: (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string, customPoints?: number) => Promise<boolean>;
   applyCampaignPoints: (campaignId: string, includeUnsubmitted?: boolean) => Promise<{ success: boolean; appliedCount: number; message: string }>;
+  applyDirectParticipantPoint: (campaignId: string, studentId: string, points: number, reason: string, newStatus?: SubmissionStatus) => Promise<boolean>;
+  removeDirectParticipantPoint: (campaignId: string, studentId: string) => Promise<boolean>;
   rollbackCampaignPoints: (campaignId: string) => Promise<boolean>;
   deleteCampaign: (id: string) => Promise<boolean>;
 
@@ -158,6 +160,11 @@ interface AppContextType {
   restoreSnapshot: (filename: string) => Promise<boolean>;
   refreshDataFromServer: () => Promise<void>;
   resetDemoData: () => Promise<void>;
+
+  // Lịch sử truy cập & Thời lượng thành viên (Access History)
+  clearAccessLogs: () => Promise<boolean>;
+  refreshAccessLogs: () => Promise<void>;
+  recordActivity: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -299,7 +306,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           id: 'acc_admin',
           username: 'admin',
           passwordHash: 'admin123',
-          displayName: 'Cô Thu Thủy (GVCN)',
+          displayName: 'Thầy Nguyễn Văn Thủy (GVCN)',
           role: 'admin',
           isLocked: false,
           createdAt: '2026-09-01T07:00:00Z',
@@ -1204,7 +1211,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
-  const updateCampaignParticipant = async (campaignId: string, studentId: string, status: SubmissionStatus, note?: string): Promise<boolean> => {
+  const updateCampaignParticipant = async (
+    campaignId: string, 
+    studentId: string, 
+    status: SubmissionStatus, 
+    note?: string,
+    extra?: { customPoints?: number; appliedDirectly?: boolean; transactionId?: string; pointsAwarded?: number }
+  ): Promise<boolean> => {
     try {
       const res = await fetch(`/api/campaigns/${campaignId}/participant`, {
         method: 'PUT',
@@ -1214,6 +1227,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           status,
           note,
           updatedBy: currentUser.displayName,
+          ...(extra || {}),
         }),
       });
       if (res.ok) {
@@ -1224,7 +1238,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             if (c.id !== campaignId) return c;
             return {
               ...c,
-              participants: c.participants.map(p => p.studentId === studentId ? result.participant : p),
+              participants: c.participants.map(p => p.studentId === studentId ? { ...result.participant, ...(extra || {}) } : p),
             };
           }),
         }));
@@ -1247,6 +1261,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               status,
               note: note !== undefined ? note : p.note,
               submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || new Date().toISOString()) : undefined,
+              ...(extra || {}),
             };
           }),
         };
@@ -1255,12 +1270,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
-  const batchUpdateParticipants = async (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string): Promise<boolean> => {
+  const batchUpdateParticipants = async (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string, customPoints?: number): Promise<boolean> => {
     try {
       const res = await fetch(`/api/campaigns/${campaignId}/batch-participants`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentIds, status, note }),
+        body: JSON.stringify({ studentIds, status, note, customPoints }),
       });
       if (res.ok) {
         const targetIds = new Set(studentIds);
@@ -1277,6 +1292,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                   ...p,
                   status,
                   note: note !== undefined ? note : p.note,
+                  customPoints: customPoints !== undefined ? customPoints : p.customPoints,
                   submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || nowIso) : undefined,
                 };
               }),
@@ -1304,6 +1320,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               ...p,
               status,
               note: note !== undefined ? note : p.note,
+              customPoints: customPoints !== undefined ? customPoints : p.customPoints,
               submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || nowIso) : undefined,
             };
           }),
@@ -1311,6 +1328,120 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }),
     }));
     showToast(`Đã cập nhật trạng thái cho ${studentIds.length} học sinh!`, 'success');
+    return true;
+  };
+
+  // Direct Point Action for Campaign / Event (Cộng/Trừ điểm trực tiếp tại đây)
+  const applyDirectParticipantPoint = async (
+    campaignId: string,
+    studentId: string,
+    points: number,
+    reason: string,
+    newStatus?: SubmissionStatus
+  ): Promise<boolean> => {
+    const camp = (data.campaigns || []).find(c => c.id === campaignId);
+    if (!camp) return false;
+    const student = data.students.find(s => s.id === studentId);
+    if (!student) return false;
+    const participant = camp.participants.find(p => p.studentId === studentId);
+
+    // If there was an existing transaction for this student in this campaign, remove it first to avoid duplicate
+    if (participant?.transactionId) {
+      await deleteTransaction(participant.transactionId);
+    }
+
+    const isLaoDong = camp.type === 'lao_dong_su_kien';
+    const typeLabel = isLaoDong ? 'Lao động / Sự kiện' : 'Cuộc thi & Phong trào';
+    const txType = points < 0 ? 'tru' : 'cong';
+    const targetWeek = camp.weekNumber || data.config.currentWeek || 4;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    let txId = `tx_direct_${camp.id}_${studentId}_${Date.now()}`;
+    const newTx: PointTransaction = {
+      id: txId,
+      studentId,
+      studentName: student.name,
+      teamId: student.teamId,
+      type: txType,
+      title: `[${typeLabel}: ${camp.title}] - ${reason}`,
+      points: points,
+      category: isLaoDong ? 'Lao động & Vệ sinh' : camp.type === 'nop_bai' ? 'Học tập' : 'Hoạt động chung',
+      notes: `Ghi nhận trực tiếp từ ${camp.title} (${reason})`,
+      createdByUserId: currentUser.id,
+      createdByRole: currentUser.role,
+      createdByName: currentUser.displayName,
+      createdAt: new Date().toISOString(),
+      occurredDate: camp.startDate || todayStr,
+      dayOfWeek: 'Thứ Hai',
+      weekNumber: targetWeek,
+      month: data.config.currentMonth || 10,
+      status: 'approved',
+      reviewedBy: currentUser.displayName,
+      reviewedAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newTx,
+          userId: currentUser.id,
+          userRole: currentUser.role,
+          userName: currentUser.displayName,
+          teamId: currentUser.teamId,
+        }),
+      });
+      if (res.ok) {
+        const resJson = await res.json();
+        if (resJson.transaction?.id) {
+          txId = resJson.transaction.id;
+        }
+        setData(prev => ({
+          ...prev,
+          transactions: [resJson.transaction, ...prev.transactions.filter(t => t.id !== resJson.transaction.id)],
+        }));
+      } else {
+        setData(prev => ({
+          ...prev,
+          transactions: [newTx, ...prev.transactions],
+        }));
+      }
+    } catch {
+      setData(prev => ({
+        ...prev,
+        transactions: [newTx, ...prev.transactions],
+      }));
+    }
+
+    const statusToSet = newStatus || participant?.status || 'chua_nop';
+    await updateCampaignParticipant(campaignId, studentId, statusToSet, participant?.note, {
+      customPoints: points,
+      appliedDirectly: true,
+      transactionId: txId,
+      pointsAwarded: points,
+    });
+
+    showToast(`✓ Đã ${points < 0 ? 'trừ' : 'cộng'} ${Math.abs(points)}đ trực tiếp cho em ${student.name} (${reason})!`, 'success');
+    return true;
+  };
+
+  const removeDirectParticipantPoint = async (campaignId: string, studentId: string): Promise<boolean> => {
+    const camp = (data.campaigns || []).find(c => c.id === campaignId);
+    const participant = camp?.participants.find(p => p.studentId === studentId);
+    if (!participant) return false;
+
+    if (participant.transactionId) {
+      await deleteTransaction(participant.transactionId);
+    }
+
+    await updateCampaignParticipant(campaignId, studentId, participant.status, participant.note, {
+      appliedDirectly: false,
+      transactionId: undefined,
+      pointsAwarded: 0,
+    });
+
+    showToast(`Đã thu hồi điểm ghi nhận của em ${participant.studentName}.`, 'info');
     return true;
   };
 
@@ -1715,6 +1846,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateCampaignParticipant,
         batchUpdateParticipants,
         applyCampaignPoints,
+        applyDirectParticipantPoint,
+        removeDirectParticipantPoint,
         rollbackCampaignPoints,
         deleteCampaign,
         clearPeriodTransactions,

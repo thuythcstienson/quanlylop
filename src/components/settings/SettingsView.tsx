@@ -67,6 +67,8 @@ export const SettingsView: React.FC = () => {
     allowStudentViewRank: data.config.allowStudentViewRank,
     allowParentViewRank: data.config.allowParentViewRank,
     currentWeek: data.config.currentWeek,
+    schoolRank: data.config.schoolRank ?? 1,
+    schoolTotalClasses: data.config.schoolTotalClasses ?? 24,
   });
 
   // New rule form
@@ -87,6 +89,8 @@ export const SettingsView: React.FC = () => {
       allowStudentViewRank: configForm.allowStudentViewRank,
       allowParentViewRank: configForm.allowParentViewRank,
       currentWeek: Number(configForm.currentWeek),
+      schoolRank: Number(configForm.schoolRank) || 1,
+      schoolTotalClasses: Number(configForm.schoolTotalClasses) || 24,
     });
   };
 
@@ -275,6 +279,40 @@ export const SettingsView: React.FC = () => {
                 onChange={(e) => setConfigForm({ ...configForm, currentWeek: Number(e.target.value) })}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none font-bold"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Thứ tự / Xếp hạng lớp toàn trường
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={configForm.schoolRank}
+                onChange={(e) => setConfigForm({ ...configForm, schoolRank: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none font-bold text-amber-700"
+              />
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Ví dụ: Hạng 1, Hạng 2... theo dõi thi đua toàn trường
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Tổng số lớp trong toàn trường
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={configForm.schoolTotalClasses}
+                onChange={(e) => setConfigForm({ ...configForm, schoolTotalClasses: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none font-bold text-slate-800"
+              />
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Tổng số lớp (VD: 24 lớp) để hiển thị Hạng {configForm.schoolRank}/{configForm.schoolTotalClasses}
+              </span>
             </div>
           </div>
 

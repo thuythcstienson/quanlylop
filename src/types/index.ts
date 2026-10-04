@@ -38,6 +38,7 @@ export interface UserPermissions {
   canManageRules: boolean;         // Cài đặt quy chế điểm (chỉ GVCN)
   canManageAccounts: boolean;      // Quản lý tài khoản & phân quyền (chỉ GVCN)
   canBackupRestore: boolean;       // Sao lưu & Khôi phục dữ liệu (chỉ GVCN)
+  canAccessAnnouncements: boolean; // Thông báo & Tin nhắn phụ huynh (chỉ GVCN, cấm cán bộ & học sinh)
 }
 
 export interface UserAccount {
@@ -137,6 +138,8 @@ export interface ClassConfig {
   allowParentViewRank: boolean;
   currentWeek: number;
   currentMonth: number;
+  schoolRank?: number | string; // Thứ tự / xếp hạng của lớp trong toàn trường (VD: 1, 2, 3...)
+  schoolTotalClasses?: number | string; // Tổng số lớp toàn trường (VD: 24)
   rolePermissions?: Partial<Record<UserRole, UserPermissions>>; // Ma trận phân quyền theo vai trò
 }
 
@@ -161,6 +164,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: true,
     canManageAccounts: true,
     canBackupRestore: true,
+    canAccessAnnouncements: true, // Chỉ GVCN được quản lý thông báo & tin nhắn phụ huynh
   },
   lop_truong: {
     canCreatePoints: true,
@@ -181,6 +185,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm ban cán sự
   },
   lop_pho_ht: {
     canCreatePoints: true,
@@ -201,6 +206,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm ban cán sự
   },
   lop_pho_nn: {
     canCreatePoints: true,
@@ -221,6 +227,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm ban cán sự
   },
   lop_pho_vtm: {
     canCreatePoints: true,
@@ -241,6 +248,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm ban cán sự
   },
   to_truong: {
     canCreatePoints: true,
@@ -261,6 +269,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm cán bộ
   },
   to_pho: {
     canCreatePoints: true,
@@ -281,6 +290,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm cán bộ
   },
   hoc_sinh: {
     canCreatePoints: false,
@@ -301,6 +311,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm học sinh
   },
   phu_huynh: {
     canCreatePoints: false,
@@ -321,6 +332,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm phụ huynh
   },
   guest: {
     canCreatePoints: false,
@@ -341,6 +353,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canManageRules: false,
     canManageAccounts: false,
     canBackupRestore: false,
+    canAccessAnnouncements: false, // Cấm khách
   },
 };
 
@@ -365,7 +378,7 @@ export interface AuditLog {
   timestamp: string;
 }
 
-export type CampaignType = 'cuoc_thi' | 'chien_dich' | 'nop_bai' | 'phong_trao';
+export type CampaignType = 'cuoc_thi' | 'chien_dich' | 'nop_bai' | 'phong_trao' | 'lao_dong_su_kien';
 export type SubmissionStatus = 'chua_nop' | 'da_nop' | 'nop_muon' | 'xuat_sac' | 'khong_tham_gia';
 
 export interface CampaignParticipant {
@@ -377,6 +390,8 @@ export interface CampaignParticipant {
   note?: string;
   pointsAwarded?: number;
   transactionId?: string;
+  customPoints?: number; // Điểm điều chỉnh tùy chọn trực tiếp
+  appliedDirectly?: boolean; // Đã ghi nhận trực tiếp vào sổ thi đua
 }
 
 export interface Campaign {
@@ -424,6 +439,22 @@ export interface StudentEvaluation {
   updatedAt?: string;
 }
 
+export interface AccessSessionLog {
+  id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  role: UserRole;
+  teamId?: number;
+  loginTime: string; // ISO date-time bắt đầu đăng nhập (ngày, giờ)
+  lastActiveTime: string; // ISO date-time hoạt động gần nhất
+  durationSeconds: number; // Trong bao lâu (thời lượng tính bằng giây)
+  device: string; // Thiết bị (Máy tính, iPhone, Android...)
+  ip?: string;
+  isOnline: boolean; // Trạng thái trực tuyến
+  actionsCount?: number; // Số thao tác trong phiên
+}
+
 export interface AppData {
   config: ClassConfig;
   students: Student[];
@@ -434,4 +465,5 @@ export interface AppData {
   auditLogs: AuditLog[];
   campaigns: Campaign[];
   evaluations: StudentEvaluation[];
+  accessLogs?: AccessSessionLog[]; // Lịch sử truy cập và thời lượng của các thành viên
 }

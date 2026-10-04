@@ -15,6 +15,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Plus, 
+  Minus,
   Edit3, 
   Trash2, 
   Sparkles, 
@@ -38,6 +39,7 @@ import { PermissionsModal } from '../accounts/PermissionsModal';
 
 const CAMPAIGN_TYPE_LABELS: Record<CampaignType, { label: string; color: string; bg: string }> = {
   cuoc_thi: { label: 'Cuộc thi / Hội thi', color: 'text-amber-800', bg: 'bg-amber-100 border-amber-200' },
+  lao_dong_su_kien: { label: 'Lao động / Sự kiện', color: 'text-teal-900', bg: 'bg-teal-100 border-teal-200' },
   chien_dich: { label: 'Chiến dịch phong trào', color: 'text-indigo-800', bg: 'bg-indigo-100 border-indigo-200' },
   nop_bai: { label: 'Nộp bài tập / Chuyên đề', color: 'text-emerald-800', bg: 'bg-emerald-100 border-emerald-200' },
   phong_trao: { label: 'Phong trào thi đua', color: 'text-purple-800', bg: 'bg-purple-100 border-purple-200' },
@@ -46,9 +48,41 @@ const CAMPAIGN_TYPE_LABELS: Record<CampaignType, { label: string; color: string;
 const SUBMISSION_STATUS_CONFIG: Record<SubmissionStatus, { label: string; short: string; color: string; badge: string; icon: any }> = {
   da_nop: { label: 'Đã nộp đúng hạn', short: 'Đã nộp', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
   xuat_sac: { label: 'Xuất sắc / Đạt giải', short: 'Xuất sắc', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-900 border-amber-300 font-bold', icon: Award },
-  nop_muon: { label: 'Nộp muộn', short: 'Nộp muộn', color: 'text-orange-700', badge: 'bg-orange-50 text-orange-800 border-orange-200', icon: Clock },
-  khong_tham_gia: { label: 'Không tham gia', short: 'Không nộp', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-800 border-rose-200', icon: X },
+  nop_muon: { label: 'Đi muộn / Nộp muộn', short: 'Đi muộn', color: 'text-orange-700', badge: 'bg-orange-50 text-orange-800 border-orange-200 font-bold', icon: Clock },
+  khong_tham_gia: { label: 'Không đi / K.tham gia', short: 'Không đi', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-800 border-rose-200 font-bold', icon: X },
   chua_nop: { label: 'Chưa nộp (Đang chờ)', short: 'Chưa nộp', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200', icon: AlertCircle },
+};
+
+const getStatusConfig = (status: SubmissionStatus, isLaoDong: boolean = false) => {
+  if (isLaoDong) {
+    switch (status) {
+      case 'da_nop':
+        return { label: 'Có mặt đúng giờ', short: 'Có mặt', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CheckCircle2 };
+      case 'xuat_sac':
+        return { label: 'Tích cực / Lao động tốt', short: 'Tích cực', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-900 border-amber-300 font-bold', icon: Award };
+      case 'nop_muon':
+        return { label: 'Đi muộn', short: 'Đi muộn', color: 'text-orange-700', badge: 'bg-orange-50 text-orange-800 border-orange-200 font-bold', icon: Clock };
+      case 'khong_tham_gia':
+        return { label: 'Không đi (Vắng mặt)', short: 'Không đi', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-800 border-rose-200 font-bold', icon: X };
+      case 'chua_nop':
+      default:
+        return { label: 'Chưa điểm danh', short: 'Chưa ĐD', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200', icon: AlertCircle };
+    }
+  }
+
+  switch (status) {
+    case 'da_nop':
+      return { label: 'Đã nộp đúng hạn', short: 'Đã nộp', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CheckCircle2 };
+    case 'xuat_sac':
+      return { label: 'Xuất sắc / Đạt giải', short: 'Xuất sắc', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-900 border-amber-300 font-bold', icon: Award };
+    case 'nop_muon':
+      return { label: 'Nộp muộn', short: 'Nộp muộn', color: 'text-orange-700', badge: 'bg-orange-50 text-orange-800 border-orange-200', icon: Clock };
+    case 'khong_tham_gia':
+      return { label: 'Không tham gia', short: 'Không nộp', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-800 border-rose-200', icon: X };
+    case 'chua_nop':
+    default:
+      return { label: 'Chưa nộp (Đang chờ)', short: 'Chưa nộp', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200', icon: AlertCircle };
+  }
 };
 
 export const CampaignsView: React.FC = () => {
@@ -60,6 +94,8 @@ export const CampaignsView: React.FC = () => {
     updateCampaignParticipant, 
     batchUpdateParticipants, 
     applyCampaignPoints, 
+    applyDirectParticipantPoint,
+    removeDirectParticipantPoint,
     rollbackCampaignPoints, 
     deleteCampaign,
     openConfirm,
@@ -75,6 +111,7 @@ export const CampaignsView: React.FC = () => {
   const [teamFilter, setTeamFilter] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [studentSearch, setStudentSearch] = useState('');
+  const [autoApplyDirectPoint, setAutoApplyDirectPoint] = useState(false);
 
   // Modal create/edit campaign
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -223,11 +260,12 @@ export const CampaignsView: React.FC = () => {
   }, [currentCampaign, teamFilter, statusFilter, studentSearch, canManageClassWide, currentUser, data.students]);
 
   // Open create modal
-  const handleOpenCreateModal = () => {
+  const handleOpenCreateModal = (defaultType?: CampaignType) => {
     setEditingCampaign(null);
+    const typeToSet = defaultType || 'cuoc_thi';
     setFormTitle('');
     setFormDescription('');
-    setFormType('cuoc_thi');
+    setFormType(typeToSet);
     setFormStartDate(toISODateString(new Date()));
     setFormEndDate(toISODateString(new Date(Date.now() + 7 * 86400000)));
     setFormWeekNumber(data.config.currentWeek || 4);
@@ -309,24 +347,131 @@ export const CampaignsView: React.FC = () => {
     });
   };
 
-  // Single participant status update
-  const handleUpdateStatus = async (studentId: string, status: SubmissionStatus) => {
-    if (!currentCampaign) return;
-    await updateCampaignParticipant(currentCampaign.id, studentId, status);
+  // Point & Status helpers
+  const getParticipantExpectedPoints = (p: CampaignParticipant, camp: Campaign) => {
+    if (p.customPoints !== undefined) return p.customPoints;
+    if (p.status === 'da_nop') return camp.rewardPoints;
+    if (p.status === 'xuat_sac') return camp.rewardPoints + camp.bonusPoints;
+    if (p.status === 'nop_muon') return -camp.latePenaltyPoints;
+    if (p.status === 'khong_tham_gia') return -camp.missPenaltyPoints;
+    return 0;
   };
 
-  // Batch update
+  const getStatusReasonText = (status: SubmissionStatus, isLaoDong: boolean) => {
+    if (isLaoDong) {
+      if (status === 'nop_muon') return 'Đi muộn buổi lao động / sự kiện';
+      if (status === 'khong_tham_gia') return 'Không đi lao động / sự kiện (vắng mặt)';
+      if (status === 'da_nop') return 'Tham gia lao động / sự kiện đúng giờ';
+      if (status === 'xuat_sac') return 'Lao động tích cực, hoàn thành xuất sắc';
+      return 'Lao động / Sự kiện';
+    }
+    if (status === 'nop_muon') return 'Nộp muộn so với hạn chót';
+    if (status === 'khong_tham_gia') return 'Không tham gia / Không nộp bài';
+    if (status === 'da_nop') return 'Nộp đúng hạn / Hoàn thành';
+    if (status === 'xuat_sac') return 'Hoàn thành xuất sắc / Đạt giải';
+    return 'Cuộc thi & Phong trào';
+  };
+
+  // Single participant status update (hỗ trợ tự động cộng/trừ điểm trực tiếp nếu bật autoApply)
+  const handleUpdateStatus = async (studentId: string, status: SubmissionStatus) => {
+    if (!currentCampaign) return;
+    const p = currentCampaign.participants.find(part => part.studentId === studentId);
+    const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+
+    if (autoApplyDirectPoint && (status === 'nop_muon' || status === 'khong_tham_gia' || status === 'da_nop' || status === 'xuat_sac')) {
+      let pts = 0;
+      if (p?.customPoints !== undefined) pts = p.customPoints;
+      else if (status === 'nop_muon') pts = -currentCampaign.latePenaltyPoints;
+      else if (status === 'khong_tham_gia') pts = -currentCampaign.missPenaltyPoints;
+      else if (status === 'da_nop') pts = currentCampaign.rewardPoints;
+      else if (status === 'xuat_sac') pts = currentCampaign.rewardPoints + currentCampaign.bonusPoints;
+
+      const reason = getStatusReasonText(status, isLaoDong);
+      await applyDirectParticipantPoint(currentCampaign.id, studentId, pts, reason, status);
+    } else {
+      await updateCampaignParticipant(currentCampaign.id, studentId, status);
+    }
+  };
+
+  // Direct Point Action on Row (Cộng hoặc trừ điểm trực tiếp tại chỗ)
+  const handleDirectPointClick = async (p: CampaignParticipant) => {
+    if (!currentCampaign) return;
+    const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+    const pts = getParticipantExpectedPoints(p, currentCampaign);
+    if (pts === 0) {
+      showToast('Vui lòng đánh dấu trạng thái (Đi muộn, Không đi, Có mặt...) hoặc điều chỉnh điểm trước khi ghi nhận!', 'info');
+      return;
+    }
+    const reason = getStatusReasonText(p.status, isLaoDong);
+    await applyDirectParticipantPoint(currentCampaign.id, p.studentId, pts, reason, p.status);
+  };
+
+  // Rollback single direct point on Row
+  const handleRemoveDirectPointClick = async (p: CampaignParticipant) => {
+    if (!currentCampaign) return;
+    await removeDirectParticipantPoint(currentCampaign.id, p.studentId);
+  };
+
+  // Adjust point directly with stepper +/-
+  const handleAdjustPoints = async (p: CampaignParticipant, delta: number) => {
+    if (!currentCampaign) return;
+    const currentPts = getParticipantExpectedPoints(p, currentCampaign);
+    const newPts = currentPts + delta;
+    
+    if (p.appliedDirectly && p.transactionId) {
+      const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+      const reason = getStatusReasonText(p.status, isLaoDong);
+      await applyDirectParticipantPoint(currentCampaign.id, p.studentId, newPts, reason, p.status);
+    } else {
+      await updateCampaignParticipant(currentCampaign.id, p.studentId, p.status, p.note, {
+        customPoints: newPts,
+      });
+      showToast(`Đã chỉnh mức điểm của em ${p.studentName}: ${newPts > 0 ? '+' : ''}${newPts}đ`, 'info');
+    }
+  };
+
+  // Batch update status
   const handleBatchMark = async (status: SubmissionStatus) => {
     if (!currentCampaign) return;
     const targetIds = filteredParticipants.map(p => p.studentId);
     if (targetIds.length === 0) return;
 
-    const statusDesc = SUBMISSION_STATUS_CONFIG[status].label;
+    const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+    const statusDesc = getStatusConfig(status, isLaoDong).label;
     openConfirm({
       title: 'Cập nhật hàng loạt',
       message: `Đánh dấu "${statusDesc}" cho ${targetIds.length} học sinh đang hiển thị trong danh sách?`,
       onConfirm: async () => {
         await batchUpdateParticipants(currentCampaign.id, targetIds, status);
+      }
+    });
+  };
+
+  // Batch apply penalties for all Late / Absent students in one click
+  const handleBatchApplyPenalties = async () => {
+    if (!currentCampaign) return;
+    const targets = currentCampaign.participants.filter(
+      p => (p.status === 'nop_muon' || p.status === 'khong_tham_gia') && !p.appliedDirectly
+    );
+    if (targets.length === 0) {
+      showToast('Hiện không có học sinh Đi muộn hoặc Không đi nào chưa được trừ điểm!', 'info');
+      return;
+    }
+
+    const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+    openConfirm({
+      title: 'Ghi nhận trừ điểm trực tiếp',
+      message: `Bạn có muốn tự động trừ điểm trực tiếp vào sổ thi đua cho ${targets.length} học sinh (Đi muộn / Không đi)? Điểm sẽ được cập nhật ngay lập tức vào bảng xếp hạng.`,
+      confirmText: 'Trừ điểm ngay',
+      onConfirm: async () => {
+        let count = 0;
+        for (const p of targets) {
+          const pts = getParticipantExpectedPoints(p, currentCampaign);
+          const reason = getStatusReasonText(p.status, isLaoDong);
+          await applyDirectParticipantPoint(currentCampaign.id, p.studentId, pts, reason, p.status);
+          count++;
+        }
+        showToast(`✓ Đã trừ điểm trực tiếp cho ${count} học sinh vào sổ thi đua!`, 'success');
       }
     });
   };
@@ -391,13 +536,25 @@ export const CampaignsView: React.FC = () => {
           )}
 
           {canCreate && (
-            <button
-              onClick={handleOpenCreateModal}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Tạo cuộc thi / chiến dịch</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleOpenCreateModal('lao_dong_su_kien')}
+                className="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                title="Tạo hoạt động Lao động / Sự kiện có điểm danh đi muộn, không đi và cộng/trừ điểm trực tiếp"
+              >
+                <Sparkles className="w-4 h-4 text-teal-200" />
+                <span>+ Lao động / Sự kiện</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOpenCreateModal('cuoc_thi')}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tạo cuộc thi</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -538,24 +695,38 @@ export const CampaignsView: React.FC = () => {
             {/* Point Rules Summary Pills */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
               <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
-                <div className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Nộp đúng hạn</div>
+                <div className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Có mặt đúng giờ' : 'Nộp đúng hạn'}
+                </div>
                 <div className="text-base font-black text-emerald-700 font-mono mt-0.5">+{currentCampaign.rewardPoints} điểm</div>
-                <div className="text-[10px] text-emerald-600">Đầy đủ theo yêu cầu</div>
+                <div className="text-[10px] text-emerald-600">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Tham gia đầy đủ, đúng giờ' : 'Đầy đủ theo yêu cầu'}
+                </div>
               </div>
               <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-300">
-                <div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Xuất sắc / Đạt giải</div>
+                <div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Tích cực / Lao động tốt' : 'Xuất sắc / Đạt giải'}
+                </div>
                 <div className="text-base font-black text-amber-800 font-mono mt-0.5">+{currentCampaign.rewardPoints + currentCampaign.bonusPoints} điểm</div>
                 <div className="text-[10px] text-amber-700">(+{currentCampaign.bonusPoints}đ thưởng thêm)</div>
               </div>
               <div className="p-2.5 rounded-xl bg-orange-50/70 border border-orange-200">
-                <div className="text-[10px] font-bold text-orange-900 uppercase tracking-wider">Nộp muộn</div>
+                <div className="text-[10px] font-bold text-orange-900 uppercase tracking-wider">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Đi muộn' : 'Nộp muộn'}
+                </div>
                 <div className="text-base font-black text-orange-700 font-mono mt-0.5">-{currentCampaign.latePenaltyPoints} điểm</div>
-                <div className="text-[10px] text-orange-600">Sau ngày {formatDDMMYYYY(parseDateLocal(currentCampaign.endDate))}</div>
+                <div className="text-[10px] text-orange-600">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Đến trễ so với giờ tập trung' : `Sau ngày ${formatDDMMYYYY(parseDateLocal(currentCampaign.endDate))}`}
+                </div>
               </div>
               <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-200">
-                <div className="text-[10px] font-bold text-rose-900 uppercase tracking-wider">Không nộp / K.tham gia</div>
+                <div className="text-[10px] font-bold text-rose-900 uppercase tracking-wider">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Không đi (Vắng mặt)' : 'Không nộp / K.tham gia'}
+                </div>
                 <div className="text-base font-black text-rose-700 font-mono mt-0.5">-{currentCampaign.missPenaltyPoints} điểm</div>
-                <div className="text-[10px] text-rose-600">Hết hạn chưa hoàn thành</div>
+                <div className="text-[10px] text-rose-600">
+                  {currentCampaign.type === 'lao_dong_su_kien' ? 'Vắng mặt buổi lao động / sự kiện' : 'Hết hạn chưa hoàn thành'}
+                </div>
               </div>
             </div>
 
@@ -564,11 +735,13 @@ export const CampaignsView: React.FC = () => {
               <div className="pt-2 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                    <span>Tiến độ nộp bài cả lớp:</span>
+                    <span>{currentCampaign.type === 'lao_dong_su_kien' ? 'Sĩ số tham gia lớp:' : 'Tiến độ nộp bài cả lớp:'}</span>
                     <strong className="text-indigo-700 font-mono">{campaignStats.submittedCount} / {campaignStats.total} HS ({campaignStats.percent}%)</strong>
                   </span>
                   <span className="text-[11px] text-slate-500">
-                    Còn {campaignStats.chuaNop} em chưa nộp
+                    {currentCampaign.type === 'lao_dong_su_kien' 
+                      ? `Còn ${campaignStats.chuaNop} em chưa điểm danh` 
+                      : `Còn ${campaignStats.chuaNop} em chưa nộp`}
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -576,44 +749,46 @@ export const CampaignsView: React.FC = () => {
                   <div 
                     style={{ width: `${(campaignStats.xuatSac / campaignStats.total) * 100}%` }} 
                     className="bg-amber-400 h-full"
-                    title={`Xuất sắc: ${campaignStats.xuatSac} HS`}
+                    title={`Xuất sắc / Tích cực: ${campaignStats.xuatSac} HS`}
                   />
                   <div 
                     style={{ width: `${(campaignStats.daNop / campaignStats.total) * 100}%` }} 
                     className="bg-emerald-500 h-full"
-                    title={`Đã nộp: ${campaignStats.daNop} HS`}
+                    title={`Đã nộp / Đúng giờ: ${campaignStats.daNop} HS`}
                   />
                   <div 
                     style={{ width: `${(campaignStats.nopMuon / campaignStats.total) * 100}%` }} 
                     className="bg-orange-400 h-full"
-                    title={`Nộp muộn: ${campaignStats.nopMuon} HS`}
+                    title={`Đi muộn / Nộp muộn: ${campaignStats.nopMuon} HS`}
                   />
                   <div 
                     style={{ width: `${(campaignStats.khongNop / campaignStats.total) * 100}%` }} 
                     className="bg-rose-400 h-full"
-                    title={`Không tham gia: ${campaignStats.khongNop} HS`}
+                    title={`Không đi / Không tham gia: ${campaignStats.khongNop} HS`}
                   />
                 </div>
 
                 {/* Status chips */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
                   <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
-                    ✓ Đã nộp đúng hạn: {campaignStats.daNop}
+                    {currentCampaign.type === 'lao_dong_su_kien' ? '✓ Có mặt đúng giờ: ' : '✓ Đã nộp đúng hạn: '}
+                    {campaignStats.daNop}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-300">
-                    ⭐ Xuất sắc/Đạt giải: {campaignStats.xuatSac}
+                    {currentCampaign.type === 'lao_dong_su_kien' ? '⭐ Tích cực: ' : '⭐ Xuất sắc/Đạt giải: '}
+                    {campaignStats.xuatSac}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg bg-orange-50 text-orange-800 font-bold border border-orange-200">
-                    ⏰ Nộp muộn: {campaignStats.nopMuon}
+                    ⏰ Đi muộn: {campaignStats.nopMuon}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-800 font-bold border border-rose-200">
+                    {currentCampaign.type === 'lao_dong_su_kien' ? '✗ Không đi: ' : '✗ Không tham gia: '}
+                    {campaignStats.khongNop}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                    ⏳ Chưa nộp: {campaignStats.chuaNop}
+                    {currentCampaign.type === 'lao_dong_su_kien' ? '⏳ Chưa điểm danh: ' : '⏳ Chưa nộp: '}
+                    {campaignStats.chuaNop}
                   </span>
-                  {campaignStats.khongNop > 0 && (
-                    <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-800 font-bold border border-rose-200">
-                      ✗ Không tham gia: {campaignStats.khongNop}
-                    </span>
-                  )}
                 </div>
               </div>
             )}
@@ -621,82 +796,122 @@ export const CampaignsView: React.FC = () => {
 
           {/* Participant Checklist Table */}
           <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div>
                 <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2">
                   <Users className="w-4 h-4 text-indigo-600" />
-                  <span>Danh Sách Học Sinh & Trạng Thái Nộp Bài</span>
+                  <span>
+                    {currentCampaign.type === 'lao_dong_su_kien'
+                      ? 'Danh Sách Học Sinh & Điểm Danh Lao Động / Sự Kiện'
+                      : 'Danh Sách Học Sinh & Trạng Thái Nộp Bài'}
+                  </span>
                 </h4>
                 <p className="text-xs text-slate-500">
-                  Bấm nút trạng thái để đánh dấu nhanh học sinh đã nộp, nộp muộn hoặc xuất sắc
+                  {currentCampaign.type === 'lao_dong_su_kien'
+                    ? 'Đánh dấu có mặt, đi muộn, không đi và cộng/trừ điểm trực tiếp vào sổ thi đua tại đây'
+                    : 'Bấm nút trạng thái để đánh dấu nhanh học sinh đã nộp, nộp muộn hoặc xuất sắc'}
                 </p>
               </div>
 
               {/* Batch Action Buttons for Teacher / Officers */}
               {canMarkSubmissions && (
-                <div className="flex items-center gap-1.5 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="text-slate-400 text-[11px] hidden md:inline">Thao tác nhanh:</span>
                   <button
+                    type="button"
                     onClick={() => handleBatchMark('da_nop')}
                     className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 cursor-pointer transition-colors"
                   >
-                    ✓ Đánh dấu tất cả Đã nộp
+                    ✓ {currentCampaign.type === 'lao_dong_su_kien' ? 'Tất cả Có mặt' : 'Tất cả Đã nộp'}
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleBatchMark('nop_muon')}
                     className="px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold rounded-lg border border-orange-200 cursor-pointer transition-colors"
                   >
-                    ⏰ Đánh dấu Nộp muộn
+                    ⏰ {currentCampaign.type === 'lao_dong_su_kien' ? 'Đánh dấu Đi muộn' : 'Đánh dấu Nộp muộn'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBatchMark('khong_tham_gia')}
+                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold rounded-lg border border-rose-200 cursor-pointer transition-colors"
+                  >
+                    ✗ {currentCampaign.type === 'lao_dong_su_kien' ? 'Đánh dấu Không đi' : 'Không tham gia'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBatchApplyPenalties}
+                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg shadow-2xs cursor-pointer transition-all flex items-center gap-1"
+                    title="Tự động trừ điểm vào sổ thi đua cho các học sinh Đi muộn hoặc Không đi"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>Trừ điểm ngay HS Đi muộn & Không đi</span>
                   </button>
                 </div>
               )}
             </div>
 
             {/* Filter and Search within participants */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
-              {/* Team Filter */}
-              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                <span className="text-[11px] font-bold text-slate-500 px-1.5">Tổ:</span>
-                {(['all', 1, 2, 3, 4] as const).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setTeamFilter(t)}
-                    className={`px-2 py-0.8 rounded-lg font-bold transition-all cursor-pointer ${
-                      teamFilter === t 
-                        ? 'bg-indigo-600 text-white shadow-2xs' 
-                        : 'text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {t === 'all' ? 'Tất cả' : `Tổ ${t}`}
-                  </button>
-                ))}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Team Filter */}
+                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-500 px-1.5">Tổ:</span>
+                  {(['all', 1, 2, 3, 4] as const).map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTeamFilter(t)}
+                      className={`px-2 py-0.8 rounded-lg font-bold transition-all cursor-pointer ${
+                        teamFilter === t 
+                          ? 'bg-indigo-600 text-white shadow-2xs' 
+                          : 'text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {t === 'all' ? 'Tất cả' : `Tổ ${t}`}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="py-1.5 px-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none"
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="chua_nop">{currentCampaign.type === 'lao_dong_su_kien' ? 'Chưa điểm danh' : 'Chưa nộp'}</option>
+                  <option value="da_nop">{currentCampaign.type === 'lao_dong_su_kien' ? 'Có mặt đúng giờ' : 'Đã nộp đúng hạn'}</option>
+                  <option value="xuat_sac">{currentCampaign.type === 'lao_dong_su_kien' ? 'Tích cực / Lao động tốt' : 'Xuất sắc / Đạt giải'}</option>
+                  <option value="nop_muon">Đi muộn</option>
+                  <option value="khong_tham_gia">{currentCampaign.type === 'lao_dong_su_kien' ? 'Không đi (Vắng mặt)' : 'Không tham gia'}</option>
+                </select>
+
+                {/* Search input */}
+                <div className="relative min-w-[160px]">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Tìm học sinh theo tên..."
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
               </div>
 
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="py-1.5 px-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none"
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="chua_nop">Chưa nộp</option>
-                <option value="da_nop">Đã nộp đúng hạn</option>
-                <option value="xuat_sac">Xuất sắc / Đạt giải</option>
-                <option value="nop_muon">Nộp muộn</option>
-                <option value="khong_tham_gia">Không tham gia</option>
-              </select>
-
-              {/* Search input */}
-              <div className="relative flex-1 min-w-[160px]">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Tìm học sinh theo tên..."
-                  value={studentSearch}
-                  onChange={(e) => setStudentSearch(e.target.value)}
-                  className="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
+              {/* Direct auto-apply toggle */}
+              {canMarkSubmissions && (
+                <label className="flex items-center gap-1.5 text-xs text-slate-700 bg-amber-50 hover:bg-amber-100/80 px-2.5 py-1.5 rounded-xl border border-amber-200 cursor-pointer select-none font-medium transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={autoApplyDirectPoint}
+                    onChange={(e) => setAutoApplyDirectPoint(e.target.checked)}
+                    className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                  <span className="font-bold text-amber-900">⚡ Tự động cộng/trừ điểm ngay khi bấm trạng thái</span>
+                </label>
+              )}
             </div>
 
             {/* Participants Table */}
@@ -706,9 +921,13 @@ export const CampaignsView: React.FC = () => {
                   <thead className="bg-slate-50 font-bold text-slate-700 border-b border-slate-200">
                     <tr>
                       <th className="py-2.5 px-3 text-center w-12">STT</th>
-                      <th className="py-2.5 px-3 min-w-[160px]">Học sinh</th>
-                      <th className="py-2.5 px-3 min-w-[280px]">Đánh dấu trạng thái nộp</th>
-                      <th className="py-2.5 px-3 text-center min-w-[90px]">Điểm quy định</th>
+                      <th className="py-2.5 px-3 min-w-[150px]">Học sinh</th>
+                      <th className="py-2.5 px-3 min-w-[320px]">
+                        {currentCampaign.type === 'lao_dong_su_kien'
+                          ? 'Điểm danh: Có mặt / Đi muộn / Không đi'
+                          : 'Đánh dấu trạng thái nộp'}
+                      </th>
+                      <th className="py-2.5 px-3 text-center min-w-[170px]">Điểm & Ghi nhận trực tiếp</th>
                       <th className="py-2.5 px-3 min-w-[180px]">Ghi chú / Nhận xét</th>
                     </tr>
                   </thead>
@@ -724,13 +943,9 @@ export const CampaignsView: React.FC = () => {
                         const student = data.students.find(s => s.id === p.studentId);
                         const isStudentTeamLeader = (currentUser.role === 'to_truong' || currentUser.role === 'to_pho') && currentUser.teamId === p.teamId;
                         const canEditThisRow = canManageClassWide || isStudentTeamLeader;
-
-                        // Expected point for this row
-                        let expectedPt = 0;
-                        if (p.status === 'da_nop') expectedPt = currentCampaign.rewardPoints;
-                        else if (p.status === 'xuat_sac') expectedPt = currentCampaign.rewardPoints + currentCampaign.bonusPoints;
-                        else if (p.status === 'nop_muon') expectedPt = -currentCampaign.latePenaltyPoints;
-                        else if (p.status === 'khong_tham_gia') expectedPt = -currentCampaign.missPenaltyPoints;
+                        const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+                        const statusCfg = getStatusConfig(p.status, isLaoDong);
+                        const expectedPt = getParticipantExpectedPoints(p, currentCampaign);
 
                         return (
                           <tr key={p.studentId} className="hover:bg-slate-50 transition-colors">
@@ -759,6 +974,7 @@ export const CampaignsView: React.FC = () => {
                             <td className="py-2.5 px-3">
                               {canEditThisRow ? (
                                 <div className="flex flex-wrap items-center gap-1">
+                                  {/* 1. Có mặt / Đã nộp */}
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateStatus(p.studentId, 'da_nop')}
@@ -767,11 +983,13 @@ export const CampaignsView: React.FC = () => {
                                         ? 'bg-emerald-600 text-white shadow-2xs'
                                         : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800'
                                     }`}
+                                    title={isLaoDong ? `Có mặt đúng giờ (+${currentCampaign.rewardPoints}đ)` : `Đã nộp đúng hạn (+${currentCampaign.rewardPoints}đ)`}
                                   >
                                     <Check className="w-3 h-3" />
-                                    <span>Đã nộp</span>
+                                    <span>{isLaoDong ? 'Có mặt' : 'Đã nộp'}</span>
                                   </button>
 
+                                  {/* 2. Tích cực / Xuất sắc */}
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateStatus(p.studentId, 'xuat_sac')}
@@ -780,52 +998,136 @@ export const CampaignsView: React.FC = () => {
                                         ? 'bg-amber-500 text-white shadow-2xs'
                                         : 'bg-slate-100 text-slate-700 hover:bg-amber-50 hover:text-amber-900'
                                     }`}
+                                    title={isLaoDong ? `Lao động tích cực (+${currentCampaign.rewardPoints + currentCampaign.bonusPoints}đ)` : `Xuất sắc (+${currentCampaign.rewardPoints + currentCampaign.bonusPoints}đ)`}
                                   >
                                     <Award className="w-3 h-3" />
-                                    <span>Xuất sắc</span>
+                                    <span>{isLaoDong ? 'Tích cực' : 'Xuất sắc'}</span>
                                   </button>
 
+                                  {/* 3. Đi muộn */}
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateStatus(p.studentId, 'nop_muon')}
                                     className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                                       p.status === 'nop_muon'
-                                        ? 'bg-orange-500 text-white shadow-2xs'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-orange-50 hover:text-orange-900'
+                                        ? 'bg-orange-500 text-white shadow-2xs ring-1 ring-orange-300'
+                                        : 'bg-orange-50 text-orange-800 hover:bg-orange-100 border border-orange-200'
                                     }`}
+                                    title={`Đi muộn (-${currentCampaign.latePenaltyPoints}đ)`}
                                   >
                                     <Clock className="w-3 h-3" />
-                                    <span>Nộp muộn</span>
+                                    <span>Đi muộn</span>
                                   </button>
 
+                                  {/* 4. Không đi / Không tham gia */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateStatus(p.studentId, 'khong_tham_gia')}
+                                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                                      p.status === 'khong_tham_gia'
+                                        ? 'bg-rose-600 text-white shadow-2xs ring-1 ring-rose-300'
+                                        : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
+                                    }`}
+                                    title={isLaoDong ? `Không đi (-${currentCampaign.missPenaltyPoints}đ)` : `Không tham gia (-${currentCampaign.missPenaltyPoints}đ)`}
+                                  >
+                                    <X className="w-3 h-3" />
+                                    <span>{isLaoDong ? 'Không đi' : 'Không nộp'}</span>
+                                  </button>
+
+                                  {/* 5. Chưa điểm danh / Chưa nộp */}
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateStatus(p.studentId, 'chua_nop')}
                                     className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
                                       p.status === 'chua_nop'
                                         ? 'bg-slate-700 text-white shadow-2xs'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                     }`}
                                   >
-                                    <span>Chưa nộp</span>
+                                    <span>{isLaoDong ? 'Chưa ĐD' : 'Chưa nộp'}</span>
                                   </button>
                                 </div>
                               ) : (
-                                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border inline-block ${SUBMISSION_STATUS_CONFIG[p.status]?.badge}`}>
-                                  {SUBMISSION_STATUS_CONFIG[p.status]?.label}
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border inline-block ${statusCfg.badge}`}>
+                                  {statusCfg.label}
                                 </span>
                               )}
                             </td>
 
-                            {/* Point Awarded */}
-                            <td className="py-2.5 px-3 text-center">
-                              {expectedPt > 0 ? (
-                                <span className="font-black text-emerald-700 font-mono text-sm">+{expectedPt}đ</span>
-                              ) : expectedPt < 0 ? (
-                                <span className="font-black text-rose-700 font-mono text-sm">{expectedPt}đ</span>
-                              ) : (
-                                <span className="text-slate-400 text-xs">0đ</span>
-                              )}
+                            {/* Point Awarded & Direct Action */}
+                            <td className="py-2.5 px-3">
+                              <div className="flex flex-col items-center gap-1.5">
+                                {/* Stepper to adjust custom points */}
+                                <div className="flex items-center gap-1">
+                                  {canEditThisRow && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAdjustPoints(p, -1)}
+                                      className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+                                      title="Bớt 1 điểm"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </button>
+                                  )}
+
+                                  <span className={`font-mono text-xs sm:text-sm font-black px-2 py-0.5 rounded-md ${
+                                    expectedPt > 0 ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' :
+                                    expectedPt < 0 ? 'text-rose-700 bg-rose-50 border border-rose-200' :
+                                    'text-slate-500 bg-slate-100'
+                                  }`}>
+                                    {expectedPt > 0 ? `+${expectedPt}đ` : expectedPt < 0 ? `${expectedPt}đ` : '0đ'}
+                                  </span>
+
+                                  {canEditThisRow && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAdjustPoints(p, 1)}
+                                      className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+                                      title="Thêm 1 điểm"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Direct Action Button or Applied Badge */}
+                                {p.appliedDirectly || p.transactionId ? (
+                                  <div className="flex items-center gap-1">
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border flex items-center gap-0.5 shadow-2xs ${
+                                      (p.pointsAwarded ?? expectedPt) < 0 
+                                        ? 'bg-rose-50 text-rose-800 border-rose-200' 
+                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    }`}>
+                                      <Check className="w-3 h-3 shrink-0" />
+                                      <span>Đã ghi sổ ({((p.pointsAwarded ?? expectedPt) > 0 ? '+' : '') + (p.pointsAwarded ?? expectedPt)}đ)</span>
+                                    </span>
+                                    {canEditThisRow && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveDirectPointClick(p)}
+                                        className="text-[10px] text-slate-400 hover:text-rose-600 underline cursor-pointer"
+                                        title="Hủy giao dịch điểm trực tiếp này"
+                                      >
+                                        Hủy
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : canEditThisRow && expectedPt !== 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDirectPointClick(p)}
+                                    className={`px-2 py-0.8 rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-all flex items-center gap-1 text-white ${
+                                      expectedPt < 0 ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                                    }`}
+                                    title="Cộng/Trừ điểm trực tiếp vào sổ thi đua ngay"
+                                  >
+                                    <Zap className="w-3 h-3" />
+                                    <span>{expectedPt < 0 ? 'Trừ điểm ngay' : 'Cộng điểm ngay'}</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400">Chưa ghi sổ</span>
+                                )}
+                              </div>
                             </td>
 
                             {/* Note input / display */}
@@ -898,6 +1200,7 @@ export const CampaignsView: React.FC = () => {
               >
                 <option value="all">Tất cả thể loại</option>
                 <option value="cuoc_thi">Cuộc thi / Hội thi</option>
+                <option value="lao_dong_su_kien">Lao động / Sự kiện</option>
                 <option value="chien_dich">Chiến dịch phong trào</option>
                 <option value="nop_bai">Nộp bài tập / Chuyên đề</option>
                 <option value="phong_trao">Phong trào thi đua</option>
@@ -928,13 +1231,24 @@ export const CampaignsView: React.FC = () => {
                 Giáo viên chủ nhiệm, Lớp trưởng hoặc các Lớp phó có thể tạo cuộc thi, kế hoạch nhỏ hoặc đợt nộp bài để theo dõi sĩ số tham gia.
               </p>
               {canCreate && (
-                <button
-                  onClick={handleOpenCreateModal}
-                  className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-indigo-700 cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Tạo cuộc thi đầu tiên ngay</span>
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateModal('lao_dong_su_kien')}
+                    className="px-4 py-2 bg-teal-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-teal-700 cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-4 h-4 text-teal-200" />
+                    <span>Tạo hoạt động Lao động / Sự kiện</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateModal('cuoc_thi')}
+                    className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-indigo-700 cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tạo cuộc thi đầu tiên</span>
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -1001,17 +1315,17 @@ export const CampaignsView: React.FC = () => {
                       {/* Rule preview pills */}
                       <div className="grid grid-cols-2 gap-1.5 text-[11px]">
                         <div className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
-                          Đúng hạn: <strong>+{camp.rewardPoints}đ</strong>
+                          {camp.type === 'lao_dong_su_kien' ? 'Đúng giờ: ' : 'Đúng hạn: '}<strong>+{camp.rewardPoints}đ</strong>
                         </div>
                         <div className="px-2 py-1 rounded-lg bg-orange-50 text-orange-800 font-semibold border border-orange-200">
-                          Nộp muộn: <strong>-{camp.latePenaltyPoints}đ</strong>
+                          {camp.type === 'lao_dong_su_kien' ? 'Đi muộn: ' : 'Nộp muộn: '}<strong>-{camp.latePenaltyPoints}đ</strong>
                         </div>
                       </div>
 
                       {/* Progress bar */}
                       <div className="space-y-1 pt-1">
                         <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
-                          <span>Tiến độ nộp:</span>
+                          <span>{camp.type === 'lao_dong_su_kien' ? 'Sĩ số tham gia:' : 'Tiến độ nộp:'}</span>
                           <span className="font-bold text-slate-900 font-mono">{submitted}/{total} HS ({percent}%)</span>
                         </div>
                         <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -1029,7 +1343,7 @@ export const CampaignsView: React.FC = () => {
                         onClick={() => setSelectedCampaignId(camp.id)}
                         className="w-full py-2 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                       >
-                        <span>Theo dõi nộp bài & Điểm danh</span>
+                        <span>{camp.type === 'lao_dong_su_kien' ? 'Điểm danh & Cộng trừ điểm trực tiếp' : 'Theo dõi nộp bài & Điểm danh'}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1077,15 +1391,15 @@ export const CampaignsView: React.FC = () => {
                 </div>
               )}
 
-              {/* Tên cuộc thi */}
+              {/* Tên cuộc thi / sự kiện */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Tên cuộc thi / Chiến dịch phong trào *
+                  {formType === 'lao_dong_su_kien' ? 'Tên hoạt động Lao động / Sự kiện *' : 'Tên cuộc thi / Chiến dịch phong trào *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Hội thi Báo tường 20/11, Nuôi heo đất, Nộp bài tập Toán..."
+                  placeholder={formType === 'lao_dong_su_kien' ? 'VD: Lao động vệ sinh trường lớp, Lễ kỷ niệm 20/11, Trực nhật tuần...' : 'VD: Hội thi Báo tường 20/11, Nuôi heo đất, Nộp bài tập Toán...'}
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -1098,10 +1412,20 @@ export const CampaignsView: React.FC = () => {
                   <label className="block font-bold text-slate-700 mb-1">Thể loại</label>
                   <select
                     value={formType}
-                    onChange={(e: any) => setFormType(e.target.value)}
+                    onChange={(e: any) => {
+                      const newT = e.target.value;
+                      setFormType(newT);
+                      if (newT === 'lao_dong_su_kien') {
+                        setFormRewardPoints(2);
+                        setFormBonusPoints(3);
+                        setFormLatePenalty(1);
+                        setFormMissPenalty(2);
+                      }
+                    }}
                     className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:bg-white"
                   >
                     <option value="cuoc_thi">Cuộc thi / Hội thi</option>
+                    <option value="lao_dong_su_kien">Lao động / Sự kiện</option>
                     <option value="chien_dich">Chiến dịch phong trào</option>
                     <option value="nop_bai">Nộp bài tập / Chuyên đề</option>
                     <option value="phong_trao">Phong trào thi đua</option>
@@ -1126,7 +1450,7 @@ export const CampaignsView: React.FC = () => {
                 <div>
                   <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Thời gian bắt đầu *</span>
+                    <span>{formType === 'lao_dong_su_kien' ? 'Ngày diễn ra / Bắt đầu *' : 'Thời gian bắt đầu *'}</span>
                   </label>
                   <input
                     type="date"
@@ -1140,7 +1464,7 @@ export const CampaignsView: React.FC = () => {
                 <div>
                   <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-rose-500" />
-                    <span className="text-rose-700">Hạn chót kết thúc (Deadline) *</span>
+                    <span className="text-rose-700">{formType === 'lao_dong_su_kien' ? 'Ngày kết thúc *' : 'Hạn chót kết thúc (Deadline) *'}</span>
                   </label>
                   <input
                     type="date"
@@ -1155,11 +1479,11 @@ export const CampaignsView: React.FC = () => {
               {/* Mô tả / Hướng dẫn */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Mô tả / Thể lệ / Yêu cầu sản phẩm (tùy chọn)
+                  {formType === 'lao_dong_su_kien' ? 'Nội dung phân công / Yêu cầu dụng cụ (tùy chọn)' : 'Mô tả / Thể lệ / Yêu cầu sản phẩm (tùy chọn)'}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="VD: Chỉ tiêu mỗi em nộp 1 bài viết hoặc tranh vẽ; tối thiểu 3kg giấy vụn..."
+                  placeholder={formType === 'lao_dong_su_kien' ? 'VD: Mang theo chổi, xô, giẻ lau; tập trung đúng 7h15 tại sân trường...' : 'VD: Chỉ tiêu mỗi em nộp 1 bài viết hoặc tranh vẽ; tối thiểu 3kg giấy vụn...'}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -1168,14 +1492,23 @@ export const CampaignsView: React.FC = () => {
 
               {/* Quy định điểm thưởng / phạt */}
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-amber-500" />
-                  <span>Quy Định Điểm Thưởng & Điểm Trừ</span>
+                <div className="font-bold text-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-amber-500" />
+                    <span>{formType === 'lao_dong_su_kien' ? 'Quy Định Điểm Tham Gia & Đi Muộn / Không Đi' : 'Quy Định Điểm Thưởng & Điểm Trừ'}</span>
+                  </div>
+                  {formType === 'lao_dong_su_kien' && (
+                    <span className="text-[10px] font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full border border-teal-200">
+                      Cộng / Trừ điểm trực tiếp
+                    </span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-emerald-800 uppercase">Cộng đúng hạn</label>
+                    <label className="text-[10px] font-bold text-emerald-800 uppercase">
+                      {formType === 'lao_dong_su_kien' ? 'Cộng đúng giờ' : 'Cộng đúng hạn'}
+                    </label>
                     <div className="flex items-center gap-1">
                       <span className="text-emerald-700 font-bold">+</span>
                       <input
@@ -1191,7 +1524,9 @@ export const CampaignsView: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-amber-900 uppercase">Thưởng xuất sắc</label>
+                    <label className="text-[10px] font-bold text-amber-900 uppercase">
+                      {formType === 'lao_dong_su_kien' ? 'Thưởng tích cực' : 'Thưởng xuất sắc'}
+                    </label>
                     <div className="flex items-center gap-1">
                       <span className="text-amber-700 font-bold">+</span>
                       <input
@@ -1207,7 +1542,9 @@ export const CampaignsView: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-orange-900 uppercase">Trừ nộp muộn</label>
+                    <label className="text-[10px] font-bold text-orange-900 uppercase">
+                      {formType === 'lao_dong_su_kien' ? 'Trừ đi muộn' : 'Trừ nộp muộn'}
+                    </label>
                     <div className="flex items-center gap-1">
                       <span className="text-orange-700 font-bold">-</span>
                       <input
@@ -1223,7 +1560,9 @@ export const CampaignsView: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-rose-900 uppercase">Trừ không nộp</label>
+                    <label className="text-[10px] font-bold text-rose-900 uppercase">
+                      {formType === 'lao_dong_su_kien' ? 'Trừ không đi' : 'Trừ không nộp'}
+                    </label>
                     <div className="flex items-center gap-1">
                       <span className="text-rose-700 font-bold">-</span>
                       <input
@@ -1238,6 +1577,15 @@ export const CampaignsView: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {formType === 'lao_dong_su_kien' && (
+                  <div className="p-2.5 bg-teal-50 rounded-xl border border-teal-200 text-teal-900 text-[11px] leading-relaxed flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Chế độ Lao động / Sự kiện:</strong> Cho phép điểm danh có mặt, đánh dấu <strong>Đi muộn</strong> và <strong>Không đi</strong>, đồng thời có thể <strong>cộng / trừ điểm trực tiếp tại đây</strong> vào sổ thi đua mà không cần chờ tổng kết kết thúc sự kiện.
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Submit Buttons */}

@@ -127,7 +127,17 @@ const MainLayout: React.FC = () => {
 
         {currentView === 'reports' && <ReportsView />}
 
-        {currentView === 'announcements' && <AnnouncementsView />}
+        {currentView === 'announcements' && (
+          currentUser.role !== 'admin' ? (
+            <AccessDeniedView 
+              target="Thông Báo & Tin Nhắn Phụ Huynh (Chỉ dành cho GVCN)" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <AnnouncementsView />
+          )
+        )}
 
         {currentView === 'accounts' && (
           (currentUser.role !== 'admin' && !hasPermission('canManageAccounts')) ? (
@@ -252,13 +262,15 @@ const MainLayout: React.FC = () => {
                 <span>Biểu dương</span>
               </button>
 
-              <button
-                onClick={() => navigateTo('announcements')}
-                className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-slate-200"
-              >
-                <Bell className="w-4 h-4 text-orange-600" />
-                <span>Thông báo & Zalo</span>
-              </button>
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={() => navigateTo('announcements')}
+                  className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-slate-200"
+                >
+                  <Bell className="w-4 h-4 text-orange-600" />
+                  <span>Thông báo & Zalo</span>
+                </button>
+              )}
 
               {(currentUser.role === 'admin' || hasPermission('canManageAccounts')) && (
                 <button

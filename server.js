@@ -267,9 +267,9 @@ async function startServer() {
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 3e3
     });
-    console.log("\u2705 \u0110\xE3 k\u1EBFt n\u1ED1i MongoDB Atlas th\xE0nh c\xF4ng!");
+    console.log("\u2705 K\u1EBFt n\u1ED1i MongoDB Atlas th\xE0nh c\xF4ng!");
   } catch (err) {
-    console.warn("\u26A0\uFE0F MongoDB Atlas ch\u01B0a k\u1EBFt n\u1ED1i \u0111\u01B0\u1EE3c (s\u1EBD ch\u1EA1y \u1EDF ch\u1EBF \u0111\u1ED9 Local Resilience an to\xE0n):", err?.message || err);
+    console.warn("\u26A0\uFE0F K\u1EBFt n\u1ED1i MongoDB Atlas th\u1EA5t b\u1EA1i (s\u1EED d\u1EE5ng Local Resilience an to\xE0n):", err?.message || err);
   }
   dbData = await loadDatabaseAsync();
   const app = express();
@@ -324,9 +324,9 @@ async function startServer() {
       saveDatabase(dbData);
     }
     if (!account) return res.status(401).json({ error: "T\xEAn \u0111\u0103ng nh\u1EADp ho\u1EB7c m\u1EADt kh\u1EA9u kh\xF4ng ch\xEDnh x\xE1c." });
-    const isMatch = account.passwordHash === cleanPass || cleanPass === "123456" || cleanUser === "admin" && (cleanPass === "admin123" || cleanPass === "123456");
+    const isMatch = account.passwordHash === cleanPass;
     if (!isMatch) return res.status(401).json({ error: "T\xEAn \u0111\u0103ng nh\u1EADp ho\u1EB7c m\u1EADt kh\u1EA9u kh\xF4ng ch\xEDnh x\xE1c." });
-    if (account.isLocked) return res.status(403).json({ error: "T\xE0i kho\u1EA3n \u0111\xE3 b\u1ECB kh\xF3a. Vui l\xF2ng li\xEAn h\u1EC7 Gi\xE1o vi\xEAn ch\u1EE7 nhi\u1EC7m." });
+    if (account.isLocked) return res.status(403).json({ error: "T\xE0i kho\u1EA3n c\u1EE7a b\u1EA1n \u0111\xE3 b\u1ECB kh\xF3a. Vui l\xF2ng li\xEAn h\u1EC7 Gi\xE1o vi\xEAn ch\u1EE7 nhi\u1EC7m." });
     account.lastLogin = (/* @__PURE__ */ new Date()).toISOString();
     saveDatabase(dbData);
     addAuditLog(account.id, account.displayName, account.role, "\u0110\u0103ng nh\u1EADp", `\u0110\u0103ng nh\u1EADp th\xE0nh c\xF4ng v\xE0o h\u1EC7 th\u1ED1ng`);
@@ -340,7 +340,7 @@ async function startServer() {
     const account = dbData.accounts.find((a) => a.id === userId);
     if (!account) return res.status(404).json({ error: "Kh\xF4ng t\xECm th\u1EA5y t\xE0i kho\u1EA3n." });
     if (!isAdminReset) {
-      const isOldMatch = account.passwordHash === currentOldPass || account.role === "admin" && (currentOldPass === "admin123" || currentOldPass === "123456") || currentOldPass === "123456";
+      const isOldMatch = account.passwordHash === currentOldPass;
       if (!isOldMatch) {
         return res.status(400).json({ error: "M\u1EADt kh\u1EA9u c\u0169 kh\xF4ng \u0111\xFAng." });
       }
@@ -373,7 +373,7 @@ async function startServer() {
     const student = dbData.students.find((s) => s.id === studentId);
     if (!student) return res.status(404).json({ error: "Kh\xF4ng t\xECm th\u1EA5y h\u1ECDc sinh." });
     if (userRole === "to_truong" && teamId && student.teamId !== teamId) {
-      return res.status(403).json({ error: "T\u1ED5 tr\u01B0\u1EDFng ch\u1EC9 c\xF3 ch\u1EE9c n\u0103ng c\u1ED9ng/tr\u1EEB \u0111i\u1EC3m cho h\u1ECDc sinh thu\u1ED9c t\u1ED5 m\xECnh." });
+      return res.status(403).json({ error: "T\u1ED5 tr\u01B0\u1EDFng ch\u1EC9 \u0111\u01B0\u1EE3c c\u1ED9ng/tr\u1EEB \u0111i\u1EC3m cho h\u1ECDc sinh thu\u1ED9c t\u1ED5 c\u1EE7a m\xECnh." });
     }
     const status = dbData.config.requireApproval && userRole !== "admin" ? "pending" : "approved";
     const todayStr = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
@@ -392,7 +392,7 @@ async function startServer() {
       createdByName: userName || "C\xE1n s\u1EF1",
       createdAt: (/* @__PURE__ */ new Date()).toISOString(),
       occurredDate: occurredDate || todayStr,
-      dayOfWeek: dayOfWeek || "Th\u1EE9",
+      dayOfWeek: dayOfWeek || "Th\u1EE9 Hai",
       weekNumber: weekNumber || dbData.config.currentWeek,
       month: month || dbData.config.currentMonth,
       status,
@@ -407,7 +407,7 @@ async function startServer() {
   });
   app.post("/api/transactions/review", (req, res) => {
     const { ids, action, adminName } = req.body;
-    if (!ids || !Array.isArray(ids) || !action) return res.status(400).json({ error: "D\u1EEF li\u1EC7u x\xE9t duy\u1EC7t kh\xF4ng h\u1EE3p l\u1EC7." });
+    if (!ids || !Array.isArray(ids) || !action) return res.status(400).json({ error: "D\u1EEF li\u1EC7u duy\u1EC7t kh\xF4ng h\u1EE3p l\u1EC7." });
     const now = (/* @__PURE__ */ new Date()).toISOString();
     let count = 0;
     dbData.transactions.forEach((tx) => {
@@ -434,7 +434,7 @@ async function startServer() {
   });
   app.post("/api/transactions/clear-period", (req, res) => {
     const { type, value, adminName } = req.body;
-    if (!type || value === void 0) return res.status(400).json({ error: "Thi\u1EBFu th\xF4ng tin k\u1EF3 x\xF3a thi \u0111ua (tu\u1EA7n ho\u1EB7c th\xE1ng)." });
+    if (!type || value === void 0) return res.status(400).json({ error: "Thi\u1EBFu th\xF4ng tin k\u1EF3 c\u1EA7n x\xF3a thi \u0111ua (tu\u1EA7n ho\u1EB7c th\xE1ng)." });
     const val = Number(value);
     const initialCount = dbData.transactions.length;
     if (type === "week") {
@@ -450,7 +450,7 @@ async function startServer() {
       addAuditLog("admin", adminName || "GVCN", "admin", "X\xF3a thi \u0111ua th\xE1ng", `X\xF3a to\xE0n b\u1ED9 ${deletedCount} \u0111i\u1EC3m thi \u0111ua c\u1EE7a Th\xE1ng ${val}`);
       return res.json({ success: true, deletedCount, message: `\u0110\xE3 x\xF3a ${deletedCount} l\u01B0\u1EE3t \u0111i\u1EC3m c\u1EE7a Th\xE1ng ${val}.` });
     }
-    res.status(400).json({ error: "Lo\u1EA1i k\u1EF3 kh\xF4ng h\u1EE3p l\u1EC7 (ch\u1EC9 h\u1ED7 tr\u1EE3 week ho\u1EB7c month)." });
+    res.status(400).json({ error: "Lo\u1EA1i k\u1EF3 kh\xF4ng h\u1EE3p l\u1EC7 (ch\u1EC9 week ho\u1EB7c month)." });
   });
   app.post("/api/students", (req, res) => {
     const { name, gender, birthDate, birthPlace, permanentAddress, teamId, roleTitle, parentName, parentPhone, notes, adminName } = req.body;
@@ -541,7 +541,7 @@ async function startServer() {
       });
     }
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "Chia t\u1ED5 t\u1EF1 \u0111\u1ED9ng", `T\u1EF1 \u0111\u1ED9ng chia ${total} h\u1ECDc sinh v\xE0o 4 t\u1ED5 (C\xE1ch chia: ${mode || "v\xF2ng tr\xF2n"})`);
+    addAuditLog("admin", adminName || "GVCN", "admin", "Chia t\u1ED5 t\u1EF1 \u0111\u1ED9ng", `T\u1EF1 \u0111\u1ED9ng chia ${total} h\u1ECDc sinh v\xE0o 4 t\u1ED5 (c\xE1ch chia: ${mode || "v\xF2ng tr\xF2n"})`);
     res.json({ success: true, students: dbData.students });
   });
   app.post("/api/students/batch-assign-team", (req, res) => {
@@ -572,7 +572,7 @@ async function startServer() {
   });
   app.post("/api/students/bulk-import", (req, res) => {
     const { students: newStudentsList, adminName } = req.body;
-    if (!newStudentsList || !Array.isArray(newStudentsList)) return res.status(400).json({ error: "D\u1EEF li\u1EC7u danh s\xE1ch kh\xF4ng h\u1EE3p l\u1EC7." });
+    if (!newStudentsList || !Array.isArray(newStudentsList)) return res.status(400).json({ error: "D\u1EEF li\u1EC7u \u0111\u1EA7u v\xE0o danh s\xE1ch kh\xF4ng h\u1EE3p l\u1EC7." });
     let nextStt = dbData.students.length > 0 ? Math.max(...dbData.students.map((s) => s.stt)) + 1 : 1;
     const addedStudents = [];
     newStudentsList.forEach((s) => {
@@ -598,12 +598,12 @@ async function startServer() {
     });
     dbData.config.totalStudents = dbData.students.length;
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "Nh\u1EADp danh s\xE1ch Excel", `\u0110\xE3 nh\u1EADp th\xEAm ${addedStudents.length} h\u1ECDc sinh t\u1EEB file Excel`);
+    addAuditLog("admin", adminName || "GVCN", "admin", "Nh\u1EADp danh s\xE1ch Excel", `Nh\u1EADp th\xEAm ${addedStudents.length} h\u1ECDc sinh t\u1EEB file Excel`);
     res.json({ success: true, count: addedStudents.length, added: addedStudents });
   });
   app.post("/api/rules", (req, res) => {
     const { type, title, points, category, adminName } = req.body;
-    if (!type || !title || points === void 0) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7 th\xF4ng tin quy ch\u1EBF." });
+    if (!type || !title || points === void 0) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EE7 th\xF4ng tin quy ch\u1EBF." });
     const newRule = {
       id: `rule_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
       type,
@@ -641,10 +641,10 @@ async function startServer() {
   });
   app.post("/api/accounts", (req, res) => {
     const { username, password, displayName, role, teamId, studentId, adminName } = req.body;
-    if (!username || !password || !displayName || !role) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7 th\xF4ng tin t\xE0i kho\u1EA3n." });
+    if (!username || !password || !displayName || !role) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EE7 th\xF4ng tin t\xE0i kho\u1EA3n." });
     const cleanUser = username.trim().toLowerCase();
     if (dbData.accounts.some((a) => a.username.toLowerCase() === cleanUser)) {
-      return res.status(400).json({ error: "T\xEAn \u0111\u0103ng nh\u1EADp n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c s\u1EED d\u1EE5ng." });
+      return res.status(400).json({ error: "T\xEAn \u0111\u0103ng nh\u1EADp \u0111\xE3 tr\xF9ng l\u1EB7p." });
     }
     const newAcc = {
       id: `acc_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
@@ -670,7 +670,7 @@ async function startServer() {
     if (username && username.trim()) {
       const cleanUser = username.trim().toLowerCase();
       const existing = dbData.accounts.find((a) => a.id !== id && a.username.toLowerCase() === cleanUser);
-      if (existing) return res.status(400).json({ error: `T\xEAn \u0111\u0103ng nh\u1EADp "@${cleanUser}" \u0111\xE3 c\xF3 t\xE0i kho\u1EA3n kh\xE1c s\u1EED d\u1EE5ng.` });
+      if (existing) return res.status(400).json({ error: `T\xEAn \u0111\u0103ng nh\u1EADp "@${cleanUser}" \u0111\xE3 t\u1ED3n t\u1EA1i \u1EDF t\xE0i kho\u1EA3n kh\xE1c.` });
       acc.username = cleanUser;
     }
     if (displayName && displayName.trim()) {
@@ -678,7 +678,7 @@ async function startServer() {
       if (acc.role === "admin") dbData.config.teacherName = displayName.trim();
     }
     if (role) {
-      if (acc.username === "admin" && role !== "admin") return res.status(400).json({ error: "Kh\xF4ng th\u1EC3 \u0111\u1ED5i quy\u1EC1n t\xE0i kho\u1EA3n qu\u1EA3n tr\u1ECB vi\xEAn ch\xEDnh." });
+      if (acc.username === "admin" && role !== "admin") return res.status(400).json({ error: "Kh\xF4ng th\u1EC3 h\u1EA1 quy\u1EC1n t\xE0i kho\u1EA3n qu\u1EA3n tr\u1ECB m\u1EB7c \u0111\u1ECBnh." });
       acc.role = role;
     }
     if (teamId !== void 0) acc.teamId = teamId ? Number(teamId) : void 0;
@@ -703,7 +703,7 @@ async function startServer() {
     if (targetAcc.role === "admin" && dbData.accounts.filter((a) => a.role === "admin").length <= 1) return res.status(400).json({ error: "Kh\xF4ng th\u1EC3 x\xF3a t\xE0i kho\u1EA3n qu\u1EA3n tr\u1ECB vi\xEAn duy nh\u1EA5t c\xF2n l\u1EA1i." });
     const deleted = dbData.accounts.splice(index, 1)[0];
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "X\xF3a t\xE0i kho\u1EA3n", `\u0110\xE3 x\xF3a v\u0129nh vi\u1EC5n t\xE0i kho\u1EA3n: @${deleted.username} (${deleted.displayName})`);
+    addAuditLog("admin", adminName || "GVCN", "admin", "X\xF3a t\xE0i kho\u1EA3n", `X\xF3a v\u0129nh vi\u1EC5n t\xE0i kho\u1EA3n: @${deleted.username} (${deleted.displayName})`);
     res.json({ success: true, deletedId: id });
   });
   app.put("/api/accounts/:id/toggle-lock", (req, res) => {
@@ -713,7 +713,7 @@ async function startServer() {
     if (!acc) return res.status(404).json({ error: "Kh\xF4ng t\xECm th\u1EA5y t\xE0i kho\u1EA3n." });
     acc.isLocked = !acc.isLocked;
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", acc.isLocked ? "Kh\xF3a t\xE0i kho\u1EA3n" : "M\u1EDF kh\xF3a t\xE0i kho\u1EA3n", `\u0110\xE3 ${acc.isLocked ? "kh\xF3a" : "m\u1EDF kh\xF3a"} t\xE0i kho\u1EA3n: ${acc.username}`);
+    addAuditLog("admin", adminName || "GVCN", "admin", acc.isLocked ? "Kh\xF3a t\xE0i kho\u1EA3n" : "M\u1EDF t\xE0i kho\u1EA3n", `\u0110\xE3 ${acc.isLocked ? "kh\xF3a" : "m\u1EDF kh\xF3a"} t\xE0i kho\u1EA3n: ${acc.username}`);
     res.json({ success: true, isLocked: acc.isLocked });
   });
   app.put("/api/accounts/:id/permissions", (req, res) => {
@@ -758,7 +758,7 @@ async function startServer() {
     if (!config) return res.status(400).json({ error: "D\u1EEF li\u1EC7u c\u1EA5u h\xECnh kh\xF4ng h\u1EE3p l\u1EC7." });
     dbData.config = { ...dbData.config, ...config };
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "C\u1EADp nh\u1EADt c\u1EA5u h\xECnh", "Thay \u0111\u1ED5i c\xE1c c\u1EA5u h\xECnh thi\u1EBFt l\u1EADp thi \u0111ua c\u1EA5p l\u1EDBp");
+    addAuditLog("admin", adminName || "GVCN", "admin", "C\u1EADp nh\u1EADt c\u1EA5u h\xECnh", "Thay \u0111\u1ED5i c\u1EA5u h\xECnh thi\u1EBFt l\u1EADp thi \u0111ua c\u1EA5p l\u1EDBp");
     res.json({ success: true, config: dbData.config });
   });
   app.post("/api/announcements", (req, res) => {
@@ -775,7 +775,7 @@ async function startServer() {
     };
     dbData.announcements.unshift(ann);
     saveDatabase(dbData);
-    addAuditLog("admin", createdBy || "GVCN", "admin", "T\u1EA1o th\xF4ng b\xE1o", `\u0110\xE3 \u0111\u0103ng th\xF4ng b\xE1o m\u1EDBi: ${ann.title}`);
+    addAuditLog("admin", createdBy || "GVCN", "admin", "T\u1EA1o th\xF4ng b\xE1o", `\u0110\u0103ng th\xF4ng b\xE1o m\u1EDBi: ${ann.title}`);
     res.json({ success: true, announcement: ann });
   });
   app.delete("/api/announcements/:id", (req, res) => {
@@ -796,22 +796,22 @@ async function startServer() {
     res.json({ backups: [] });
   });
   app.post("/api/backups/create", (req, res) => {
-    res.status(400).json({ error: "T\xEDnh n\u0103ng sao l\u01B0u file b\u1ECB v\xF4 hi\u1EC7u h\xF3a khi d\xF9ng MongoDB \u0111\xE1m m\xE2y." });
+    res.status(400).json({ error: "T\xEDnh n\u0103ng sao l\u01B0u file c\u1EE5c b\u1ED9 \u0111\xE3 b\u1ECB v\xF4 hi\u1EC7u h\xF3a khi d\xF9ng MongoDB \u0111\xE1m m\xE2y." });
   });
   app.post("/api/backups/restore-snapshot", (req, res) => {
-    res.status(400).json({ error: "T\xEDnh n\u0103ng kh\xF4i ph\u1EE5c file c\u1EE5c b\u1ED9 b\u1ECB v\xF4 hi\u1EC7u h\xF3a." });
+    res.status(400).json({ error: "T\xEDnh n\u0103ng kh\xF4i ph\u1EE5c file c\u1EE5c b\u1ED9 \u0111\xE3 b\u1ECB v\xF4 hi\u1EC7u h\xF3a." });
   });
   app.post("/api/backup/restore", (req, res) => {
     const { backupData, adminName } = req.body;
     if (!backupData || !backupData.config || !backupData.students) return res.status(400).json({ error: "File sao l\u01B0u kh\xF4ng \u0111\xFAng \u0111\u1ECBnh d\u1EA1ng c\u1EE7a \u1EE9ng d\u1EE5ng." });
     dbData = backupData;
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "Kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u", "\u0110\xE3 kh\xF4i ph\u1EE5c th\xE0nh c\xF4ng to\xE0n b\u1ED9 d\u1EEF li\u1EC7u t\u1EEB file sao l\u01B0u t\u1EA3i l\xEAn");
+    addAuditLog("admin", adminName || "GVCN", "admin", "Kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u", "Kh\xF4i ph\u1EE5c th\xE0nh c\xF4ng to\xE0n b\u1ED9 d\u1EEF li\u1EC7u t\u1EEB file sao l\u01B0u t\u1EA3i l\xEAn");
     res.json({ success: true, message: "Kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u th\xE0nh c\xF4ng." });
   });
   app.post("/api/campaigns", (req, res) => {
     const { title, description, type, startDate, endDate, weekNumber, rewardPoints, bonusPoints, latePenaltyPoints, missPenaltyPoints, createdBy, createdRole, participants } = req.body;
-    if (!title || !startDate || !endDate) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7 t\xEAn cu\xF4c thi/chi\u1EBFn d\u1ECBch v\xE0 th\u1EDDi gian b\u1EAFt \u0111\u1EA7u, k\u1EBFt th\xFAc." });
+    if (!title || !startDate || !endDate) return res.status(400).json({ error: "Vui l\xF2ng nh\u1EADp \u0111\u1EE7 t\xEAn cu\xF4\u0323c thi/chi\xEA\u0301n di\u0323ch va\u0300 th\u01A1\u0300i gian b\u0103\u0301t \u0111\xE2\u0300u, k\xEA\u0301t thu\u0301c." });
     const studentParticipants = participants && participants.length > 0 ? participants : dbData.students.map((s) => ({
       studentId: s.id,
       studentName: s.name,
@@ -861,12 +861,12 @@ async function startServer() {
     if (missPenaltyPoints !== void 0) camp.missPenaltyPoints = Math.abs(Number(missPenaltyPoints));
     if (status) camp.status = status;
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "C\xE1n b\u1ED9 l\u1EDBp", "admin", "C\u1EADp nh\u1EADt chi\u1EBFn d\u1ECBch", `C\u1EADp nh\u1EADt th\xF4ng tin chi\u1EBFn d\u1ECBch: ${camp.title}`);
+    addAuditLog("admin", adminName || "C\xE1n s\u1EF1 c\u1EA5p cao", "admin", "C\u1EADp nh\u1EADt chi\u1EBFn d\u1ECBch", `C\u1EADp nh\u1EADt th\xF4ng tin chi\u1EBFn d\u1ECBch: ${camp.title}`);
     res.json({ success: true, campaign: camp });
   });
   app.put("/api/campaigns/:id/participant", (req, res) => {
     const { id } = req.params;
-    const { studentId, status, note, submittedAt, updatedBy } = req.body;
+    const { studentId, status, note, submittedAt, updatedBy, customPoints, appliedDirectly, transactionId, pointsAwarded } = req.body;
     if (!dbData.campaigns) dbData.campaigns = [];
     const camp = dbData.campaigns.find((c) => c.id === id);
     if (!camp) return res.status(404).json({ error: "Kh\xF4ng t\xECm th\u1EA5y cu\u1ED9c thi / chi\u1EBFn d\u1ECBch." });
@@ -884,6 +884,10 @@ async function startServer() {
     }
     if (status) p.status = status;
     if (note !== void 0) p.note = note;
+    if (customPoints !== void 0) p.customPoints = customPoints;
+    if (appliedDirectly !== void 0) p.appliedDirectly = appliedDirectly;
+    if (transactionId !== void 0) p.transactionId = transactionId;
+    if (pointsAwarded !== void 0) p.pointsAwarded = pointsAwarded;
     if (submittedAt !== void 0) {
       p.submittedAt = submittedAt;
     } else if (status === "da_nop" || status === "xuat_sac" || status === "nop_muon") {
@@ -896,7 +900,7 @@ async function startServer() {
   });
   app.put("/api/campaigns/:id/batch-participants", (req, res) => {
     const { id } = req.params;
-    const { studentIds, status, note } = req.body;
+    const { studentIds, status, note, customPoints } = req.body;
     if (!dbData.campaigns) dbData.campaigns = [];
     const camp = dbData.campaigns.find((c) => c.id === id);
     if (!camp) return res.status(404).json({ error: "Kh\xF4ng t\xECm th\u1EA5y cu\u1ED9c thi / chi\u1EBFn d\u1ECBch." });
@@ -915,6 +919,7 @@ async function startServer() {
       if (p) {
         p.status = status;
         if (note !== void 0) p.note = note;
+        if (customPoints !== void 0) p.customPoints = customPoints;
         if (status === "da_nop" || status === "xuat_sac" || status === "nop_muon") {
           p.submittedAt = p.submittedAt || nowIso;
         } else if (status === "chua_nop") {
@@ -936,8 +941,14 @@ async function startServer() {
       const prevTxIds = new Set(camp.participants.map((p) => p.transactionId).filter(Boolean));
       dbData.transactions = dbData.transactions.filter((t) => !prevTxIds.has(t.id));
     }
-    const typeLabelMap = { cuoc_thi: "Cu\u1ED9c thi", chien_dich: "Chi\u1EBFn d\u1ECBch", nop_bai: "N\u1ED9p b\xE0i", phong_trao: "Phong tr\xE0o" };
-    const typeLabel = typeLabelMap[camp.type] || "Cu\u1ED9c thi";
+    const typeLabelMap = {
+      cuoc_thi: "Cu\u1ED9c thi",
+      chien_dich: "Chi\u1EBFn d\u1ECBch",
+      nop_bai: "N\u1ED9p b\xE0i",
+      phong_trao: "Phong tr\xE0o",
+      lao_dong_su_kien: "Lao \u0111\u1ED9ng / S\u1EF1 ki\u1EC7n"
+    };
+    const typeLabel = typeLabelMap[camp.type] || "Cu\u1ED9c thi / S\u1EF1 ki\u1EC7n";
     let appliedCount = 0;
     const nowIso = (/* @__PURE__ */ new Date()).toISOString();
     const targetWeek = camp.weekNumber || dbData.config.currentWeek || 4;
@@ -945,25 +956,26 @@ async function startServer() {
       let signedPoints = 0;
       let statusDesc = "";
       let txType = "cong";
+      const isLaoDong = camp.type === "lao_dong_su_kien";
       if (p.status === "da_nop") {
-        signedPoints = camp.rewardPoints;
-        statusDesc = "\u0110\xFAng h\u1EA1n / \u0110\u1EA1t y\xEAu c\u1EA7u";
-        txType = "cong";
+        signedPoints = p.customPoints !== void 0 ? p.customPoints : camp.rewardPoints;
+        statusDesc = isLaoDong ? "Tham gia lao \u0111\u1ED9ng / s\u1EF1 ki\u1EC7n \u0111\xFAng gi\u1EDD" : "\u0110\xE3 n\u1ED9p \u0111\xFAng h\u1EA1n / Ho\xE0n th\xE0nh";
+        txType = signedPoints < 0 ? "tru" : "cong";
       } else if (p.status === "xuat_sac") {
-        signedPoints = camp.rewardPoints + camp.bonusPoints;
-        statusDesc = "Ho\xE0n th\xE0nh xu\u1EA5t s\u1EAFc / \u0110\u1EA1t gi\u1EA3i cao";
+        signedPoints = p.customPoints !== void 0 ? p.customPoints : camp.rewardPoints + camp.bonusPoints;
+        statusDesc = isLaoDong ? "Lao \u0111\u1ED9ng t\xEDch c\u1EF1c / Ho\xE0n th\xE0nh xu\u1EA5t s\u1EAFc" : "Ho\xE0n th\xE0nh xu\u1EA5t s\u1EAFc / \u0110\u1EA1t gi\u1EA3i cao";
         txType = "bieu_duong";
       } else if (p.status === "nop_muon") {
-        signedPoints = -camp.latePenaltyPoints;
-        statusDesc = "N\u1ED9p mu\u1ED9n so v\u1EDBi quy \u0111\u1ECBnh";
+        signedPoints = p.customPoints !== void 0 ? -Math.abs(p.customPoints) : -camp.latePenaltyPoints;
+        statusDesc = isLaoDong ? "\u0110i mu\u1ED9n trong bu\u1ED5i lao \u0111\u1ED9ng / s\u1EF1 ki\u1EC7n" : "N\u1ED9p mu\u1ED9n so v\u1EDBi quy \u0111\u1ECBnh";
         txType = "tru";
       } else if (p.status === "khong_tham_gia") {
-        signedPoints = -camp.missPenaltyPoints;
-        statusDesc = "Kh\xF4ng tham gia / Kh\xF4ng n\u1ED9p b\xE0i";
+        signedPoints = p.customPoints !== void 0 ? -Math.abs(p.customPoints) : -camp.missPenaltyPoints;
+        statusDesc = isLaoDong ? "Kh\xF4ng \u0111i lao \u0111\u1ED9ng / v\u1EAFng m\u1EB7t s\u1EF1 ki\u1EC7n" : "Kh\xF4ng tham gia / Kh\xF4ng n\u1ED9p b\xE0i";
         txType = "tru";
       } else if (p.status === "chua_nop" && includeUnsubmitted) {
-        signedPoints = -camp.missPenaltyPoints;
-        statusDesc = "Qu\xE1 h\u1EA1n ch\u01B0a ho\xE0n th\xE0nh";
+        signedPoints = p.customPoints !== void 0 ? -Math.abs(p.customPoints) : -camp.missPenaltyPoints;
+        statusDesc = isLaoDong ? "Kh\xF4ng tham gia / v\u1EAFng m\u1EB7t" : "Qu\xE1 h\u1EA1n ch\u01B0a ho\xE0n th\xE0nh";
         txType = "tru";
       }
       if (signedPoints !== 0) {
@@ -977,13 +989,13 @@ async function startServer() {
             type: txType,
             title: `[${typeLabel}: ${camp.title}] - ${statusDesc}`,
             points: signedPoints,
-            category: camp.type === "nop_bai" ? "H\u1ECDc t\u1EADp" : camp.type === "cuoc_thi" ? "V\u0103n th\u1EC3 m\u1EF9" : "Ho\u1EA1t \u0111\u1ED9ng chung",
-            notes: p.note ? `${p.note} (H\u1EA1n ch\xF3t: ${camp.endDate})` : `Ghi nh\u1EADn t\u1EF1 \u0111\u1ED9ng t\u1EEB ${camp.title}`,
+            category: camp.type === "nop_bai" ? "H\u1ECDc t\u1EADp" : camp.type === "lao_dong_su_kien" ? "Lao \u0111\u1ED9ng & V\u1EC7 sinh" : camp.type === "cuoc_thi" ? "V\u0103n th\u1EC3 m\u1EF9" : "Ho\u1EA1t \u0111\u1ED9ng chung",
+            notes: p.note ? `${p.note} (Th\u1EDDi gian: ${camp.startDate || camp.endDate})` : `Ghi nh\u1EADn t\u1EEB ${camp.title}`,
             createdByUserId: userId || "acc_admin",
             createdByRole: adminRole || "admin",
             createdByName: adminName || "GVCN & C\xE1n s\u1EF1",
             createdAt: nowIso,
-            occurredDate: camp.endDate,
+            occurredDate: camp.startDate || camp.endDate,
             dayOfWeek: "Th\u1EE9 Hai",
             weekNumber: targetWeek,
             month: dbData.config.currentMonth || 10,
@@ -994,17 +1006,19 @@ async function startServer() {
           dbData.transactions.unshift(tx);
           p.transactionId = tx.id;
           p.pointsAwarded = signedPoints;
+          p.appliedDirectly = true;
           appliedCount++;
         }
       } else {
         p.transactionId = void 0;
         p.pointsAwarded = 0;
+        p.appliedDirectly = false;
       }
     });
     camp.pointsApplied = true;
     camp.pointsAppliedAt = nowIso;
     saveDatabase(dbData);
-    addAuditLog(adminRole || "admin", adminName || "GVCN", adminRole || "admin", "T\xEDnh \u0111i\u1EC3m chi\u1EBFn d\u1ECBch", `\xC1p d\u1EE5ng c\u1ED9ng/tr\u1EEB t\u1EF1 \u0111\u1ED9ng \u0111i\u1EC3m thi \u0111ua cho ${appliedCount} h\u1ECDc sinh tham gia: ${camp.title} (Tu\u1EA7n ${targetWeek})`);
+    addAuditLog(adminRole || "admin", adminName || "GVCN", adminRole || "admin", "T\u1ED5ng k\u1EBFt chi\u1EBFn d\u1ECBch", `T\u1EF1 \u0111\u1ED9ng c\u1ED9ng/tr\u1EEB \u0111i\u1EC3m thi \u0111ua cho ${appliedCount} h\u1ECDc sinh tham gia: ${camp.title} (Tu\u1EA7n ${targetWeek})`);
     res.json({ success: true, appliedCount, campaign: camp });
   });
   app.post("/api/campaigns/:id/rollback-points", (req, res) => {
@@ -1022,7 +1036,7 @@ async function startServer() {
     camp.pointsApplied = false;
     camp.pointsAppliedAt = void 0;
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "H\u1EE7y \u0111i\u1EC3m chi\u1EBFn d\u1ECBch", `H\u1EE7y to\xE0n b\u1ED9 \u0111i\u1EC3m c\u1ED9ng/tr\u1EEB t\u1EF1 \u0111\u1ED9ng c\u1EE7a chi\u1EBFn d\u1ECBch: ${camp.title}`);
+    addAuditLog("admin", adminName || "GVCN", "admin", "H\u1EE7y \u0111i\u1EC3m chi\u1EBFn d\u1ECBch", `H\u1EE7y to\xE0n b\u1ED9 c\u1ED9ng/tr\u1EEB \u0111i\u1EC3m t\u1EF1 \u0111\u1ED9ng c\u1EE7a chi\u1EBFn d\u1ECBch: ${camp.title}`);
     res.json({ success: true, campaign: camp });
   });
   app.delete("/api/campaigns/:id", (req, res) => {
@@ -1065,7 +1079,7 @@ async function startServer() {
     if (!dbData.evaluations) dbData.evaluations = [];
     dbData.evaluations.unshift(newEval);
     saveDatabase(dbData);
-    addAuditLog(authorId || "acc_admin", authorName || "C\xF4 gi\xE1o", authorRole || "admin", "Nh\u1EADn x\xE9t h\u1ECDc sinh", `\u0110\xE3 th\xEAm nh\u1EADn x\xE9t cho HS ${student.name} (${newEval.periodLabel})`);
+    addAuditLog(authorId || "acc_admin", authorName || "C\xE1n b\u1ED9", authorRole || "admin", "Nh\u1EADn x\xE9t h\u1ECDc sinh", `\u0110\xE3 th\xEAm nh\u1EADn x\xE9t cho HS ${student.name} (${newEval.periodLabel})`);
     res.json({ success: true, evaluation: newEval });
   });
   app.put("/api/evaluations/:id", (req, res) => {
@@ -1100,8 +1114,8 @@ async function startServer() {
     const { adminName } = req.body;
     dbData = JSON.parse(JSON.stringify(INITIAL_APP_DATA));
     saveDatabase(dbData);
-    addAuditLog("admin", adminName || "GVCN", "admin", "Kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u g\u1ED1c", "\u0110\xE3 kh\u1EDFi t\u1EA1o l\u1EA1i to\xE0n b\u1ED9 d\u1EEF li\u1EC7u m\u1EABu l\u1EDBp 9A1 - THCS V\xE2n H\xE0 2");
-    res.json({ success: true, message: "\u0110\xE3 kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u m\u1EABu ban \u0111\u1EA7u th\xE0nh c\xF4ng." });
+    addAuditLog("admin", adminName || "GVCN", "admin", "Kh\xF4i ph\u1EE5c M\u1EB7c \u0111\u1ECBnh", "\u0110\xE3 kh\xF4i ph\u1EE5c to\xE0n b\u1ED9 h\u1EC7 th\u1ED1ng v\u1EC1 danh s\xE1ch L\u1EDBp 9A1 - THCS V\xE2n H\xE0 2");
+    res.json({ success: true, message: "Kh\xF4i ph\u1EE5c d\u1EEF li\u1EC7u ban \u0111\u1EA7u th\xE0nh c\xF4ng." });
   });
   if (isDev) {
     const vite = await createViteServer({

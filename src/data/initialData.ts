@@ -1,4 +1,4 @@
-import { AppData, PointRule, Student, UserAccount, PointTransaction, Announcement, AuditLog, Campaign, StudentEvaluation } from '../types';
+import { AppData, PointRule, Student, UserAccount, PointTransaction, Announcement, AuditLog, Campaign, StudentEvaluation, AccessSessionLog } from '../types';
 
 export const INITIAL_STUDENTS: Student[] = [
   // TỔ 1 (10 HS)
@@ -81,7 +81,7 @@ export const INITIAL_RULES: PointRule[] = [
 ];
 
 export const INITIAL_ACCOUNTS: UserAccount[] = [
-  { id: 'acc_admin', username: 'admin', passwordHash: 'admin123', displayName: 'Cô Thu Thủy (GVCN)', role: 'admin', isLocked: false, createdAt: '2026-09-01T07:00:00Z' },
+  { id: 'acc_admin', username: 'admin', passwordHash: 'admin123', displayName: 'Thầy Nguyễn Văn Thủy (GVCN)', role: 'admin', isLocked: false, createdAt: '2026-09-01T07:00:00Z' },
   { id: 'acc_loptruong', username: 'loptruong', passwordHash: '123456', displayName: 'Nguyễn Đức Minh (Lớp trưởng)', role: 'lop_truong', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_01', teamId: 1 },
   { id: 'acc_loppho_ht', username: 'loppho_ht', passwordHash: '123456', displayName: 'Trần Thị Mai Phương (LP Học tập)', role: 'lop_pho_ht', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_11', teamId: 2 },
   { id: 'acc_loppho_nn', username: 'loppho_nn', passwordHash: '123456', displayName: 'Lê Hoàng Nam (LP Nề nếp)', role: 'lop_pho_nn', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_21', teamId: 3 },
@@ -103,7 +103,7 @@ export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
     target: 'all',
     priority: 'urgent',
     createdAt: '2026-10-01T07:00:00Z',
-    createdBy: 'Cô Thu Thủy (GVCN)'
+    createdBy: 'Thầy Nguyễn Văn Thủy (GVCN)'
   },
   {
     id: 'ann_02',
@@ -112,7 +112,7 @@ export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
     target: 'cadres',
     priority: 'important',
     createdAt: '2026-10-02T11:00:00Z',
-    createdBy: 'Cô Thu Thủy (GVCN)'
+    createdBy: 'Thầy Nguyễn Văn Thủy (GVCN)'
   },
   {
     id: 'ann_03',
@@ -121,7 +121,7 @@ export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
     target: 'parents',
     priority: 'normal',
     createdAt: '2026-09-29T17:00:00Z',
-    createdBy: 'Cô Thu Thủy (GVCN)'
+    createdBy: 'Thầy Nguyễn Văn Thủy (GVCN)'
   }
 ];
 
@@ -129,7 +129,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   {
     id: 'log_01',
     userId: 'acc_admin',
-    userName: 'Cô Thu Thủy (GVCN)',
+    userName: 'Thầy Nguyễn Văn Thủy (GVCN)',
     role: 'admin',
     action: 'Khởi tạo hệ thống',
     details: 'Thiết lập danh sách 41 học sinh Lớp 9A1 và quy chế điểm năm học 2026–2027',
@@ -159,12 +159,181 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [];
 
 export const INITIAL_EVALUATIONS: StudentEvaluation[] = [];
 
+export const INITIAL_ACCESS_LOGS: AccessSessionLog[] = [
+  {
+    id: 'sess_01',
+    userId: 'acc_admin',
+    username: 'admin',
+    displayName: 'Thầy Nguyễn Văn Thủy (GVCN)',
+    role: 'admin',
+    loginTime: '2026-10-04T07:15:20Z',
+    lastActiveTime: '2026-10-04T08:25:10Z',
+    durationSeconds: 4190, // 1 giờ 9 phút 50 giây
+    device: 'Máy tính (Windows 11 - Chrome)',
+    isOnline: true,
+    actionsCount: 14,
+  },
+  {
+    id: 'sess_02',
+    userId: 'acc_loptruong',
+    username: 'loptruong',
+    displayName: 'Nguyễn Đức Minh (Lớp trưởng)',
+    role: 'lop_truong',
+    teamId: 1,
+    loginTime: '2026-10-04T06:45:00Z',
+    lastActiveTime: '2026-10-04T07:30:15Z',
+    durationSeconds: 2715, // 45 phút 15 giây
+    device: 'Điện thoại (iPhone - Safari)',
+    isOnline: false,
+    actionsCount: 8,
+  },
+  {
+    id: 'sess_03',
+    userId: 'acc_loppho_ht',
+    username: 'loppho_ht',
+    displayName: 'Trần Thị Mai Phương (LP Học tập)',
+    role: 'lop_pho_ht',
+    teamId: 2,
+    loginTime: '2026-10-04T07:05:10Z',
+    lastActiveTime: '2026-10-04T07:35:40Z',
+    durationSeconds: 1830, // 30 phút 30 giây
+    device: 'Máy tính (macOS - Safari)',
+    isOnline: false,
+    actionsCount: 5,
+  },
+  {
+    id: 'sess_04',
+    userId: 'acc_loppho_nn',
+    username: 'loppho_nn',
+    displayName: 'Lê Hoàng Nam (LP Nề nếp)',
+    role: 'lop_pho_nn',
+    teamId: 3,
+    loginTime: '2026-10-04T07:20:00Z',
+    lastActiveTime: '2026-10-04T07:55:00Z',
+    durationSeconds: 2100, // 35 phút
+    device: 'Điện thoại (Android - Chrome)',
+    isOnline: false,
+    actionsCount: 6,
+  },
+  {
+    id: 'sess_05',
+    userId: 'acc_totruong1',
+    username: 'totruong1',
+    displayName: 'Vũ Quốc Bảo (Tổ trưởng 1)',
+    role: 'to_truong',
+    teamId: 1,
+    loginTime: '2026-10-04T07:30:00Z',
+    lastActiveTime: '2026-10-04T07:48:20Z',
+    durationSeconds: 1100, // 18 phút 20 giây
+    device: 'Điện thoại (Android - Chrome)',
+    isOnline: false,
+    actionsCount: 3,
+  },
+  {
+    id: 'sess_06',
+    userId: 'acc_totruong2',
+    username: 'totruong2',
+    displayName: 'Đặng Minh Quân (Tổ trưởng 2)',
+    role: 'to_truong',
+    teamId: 2,
+    loginTime: '2026-10-03T19:10:00Z',
+    lastActiveTime: '2026-10-03T19:35:00Z',
+    durationSeconds: 1500, // 25 phút
+    device: 'Máy tính (Windows 10 - Edge)',
+    isOnline: false,
+    actionsCount: 4,
+  },
+  {
+    id: 'sess_07',
+    userId: 'acc_totruong3',
+    username: 'totruong3',
+    displayName: 'Bùi Hải Đăng (Tổ trưởng 3)',
+    role: 'to_truong',
+    teamId: 3,
+    loginTime: '2026-10-03T18:45:00Z',
+    lastActiveTime: '2026-10-03T19:05:00Z',
+    durationSeconds: 1200, // 20 phút
+    device: 'Điện thoại (iPhone - Safari)',
+    isOnline: false,
+    actionsCount: 2,
+  },
+  {
+    id: 'sess_08',
+    userId: 'acc_totruong4',
+    username: 'totruong4',
+    displayName: 'Dương Gia Huy (Tổ trưởng 4)',
+    role: 'to_truong',
+    teamId: 4,
+    loginTime: '2026-10-03T20:00:00Z',
+    lastActiveTime: '2026-10-03T20:22:30Z',
+    durationSeconds: 1350, // 22 phút 30 giây
+    device: 'Điện thoại (Android - Chrome)',
+    isOnline: false,
+    actionsCount: 3,
+  },
+  {
+    id: 'sess_09',
+    userId: 'acc_phuhuynh',
+    username: 'phuhuynh',
+    displayName: 'Phụ huynh HS Nguyễn Văn An',
+    role: 'phu_huynh',
+    teamId: 1,
+    loginTime: '2026-10-03T21:15:00Z',
+    lastActiveTime: '2026-10-03T21:27:00Z',
+    durationSeconds: 720, // 12 phút
+    device: 'Điện thoại (iPhone - Safari)',
+    isOnline: false,
+    actionsCount: 1,
+  },
+  {
+    id: 'sess_10',
+    userId: 'acc_hocsinh',
+    username: 'hocsinh',
+    displayName: 'Học sinh Nguyễn Văn An',
+    role: 'hoc_sinh',
+    teamId: 1,
+    loginTime: '2026-10-03T16:30:00Z',
+    lastActiveTime: '2026-10-03T16:45:00Z',
+    durationSeconds: 900, // 15 phút
+    device: 'Máy tính (Windows 11 - Chrome)',
+    isOnline: false,
+    actionsCount: 2,
+  },
+  {
+    id: 'sess_11',
+    userId: 'acc_loptruong',
+    username: 'loptruong',
+    displayName: 'Nguyễn Đức Minh (Lớp trưởng)',
+    role: 'lop_truong',
+    teamId: 1,
+    loginTime: '2026-10-03T07:00:00Z',
+    lastActiveTime: '2026-10-03T07:42:00Z',
+    durationSeconds: 2520, // 42 phút
+    device: 'Điện thoại (iPhone - Safari)',
+    isOnline: false,
+    actionsCount: 7,
+  },
+  {
+    id: 'sess_12',
+    userId: 'acc_admin',
+    username: 'admin',
+    displayName: 'Thầy Nguyễn Văn Thủy (GVCN)',
+    role: 'admin',
+    loginTime: '2026-10-03T06:30:00Z',
+    lastActiveTime: '2026-10-03T07:45:00Z',
+    durationSeconds: 4500, // 1 giờ 15 phút
+    device: 'Máy tính (Windows 11 - Chrome)',
+    isOnline: false,
+    actionsCount: 19,
+  }
+];
+
 export const INITIAL_APP_DATA: AppData = {
   config: {
     schoolName: 'THCS Vân Hà 2',
     className: '9A1',
     schoolYear: '2026–2027',
-    teacherName: 'Nguyễn Thị Thu Thủy',
+    teacherName: 'Thầy Nguyễn Văn Thủy',
     totalStudents: 41,
     startDate: '2026-09-07',
     basePoints: 100,
@@ -175,6 +344,8 @@ export const INITIAL_APP_DATA: AppData = {
     allowParentViewRank: true,
     currentWeek: 4,
     currentMonth: 10,
+    schoolRank: 1, // Thứ tự của lớp trong toàn trường
+    schoolTotalClasses: 24, // Tổng số lớp toàn trường
   },
   students: INITIAL_STUDENTS,
   rules: INITIAL_RULES,
@@ -184,4 +355,5 @@ export const INITIAL_APP_DATA: AppData = {
   auditLogs: INITIAL_AUDIT_LOGS,
   campaigns: INITIAL_CAMPAIGNS,
   evaluations: INITIAL_EVALUATIONS,
+  accessLogs: INITIAL_ACCESS_LOGS,
 };

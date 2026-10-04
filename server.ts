@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_APP_DATA } from './src/data/initialData';
-import { AppData, PointTransaction, Student, UserAccount, AuditLog, PointRule, Announcement, Campaign, CampaignParticipant, SubmissionStatus, StudentEvaluation, DEFAULT_ROLE_PERMISSIONS, UserPermissions } from './src/types';
+import { AppData, PointTransaction, Student, UserAccount, AuditLog, PointRule, Announcement, Campaign, CampaignParticipant, SubmissionStatus, StudentEvaluation, DEFAULT_ROLE_PERMISSIONS, UserPermissions, AccessSessionLog } from './src/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +28,7 @@ const AppDataSchema = new mongoose.Schema({
   auditLogs: Array,
   campaigns: Array,
   evaluations: Array,
+  accessLogs: Array,
 }, { strict: false });
 
 const AppDataModel = mongoose.model('AppData', AppDataSchema);
@@ -75,7 +76,7 @@ async function loadDatabaseAsync(): Promise<AppData> {
         id: 'acc_admin',
         username: 'admin',
         passwordHash: 'admin123',
-        displayName: 'Cô Thu Thủy (GVCN)',
+        displayName: 'Thầy Nguyễn Văn Thủy (GVCN)',
         role: 'admin',
         isLocked: false,
         createdAt: '2026-09-01T07:00:00Z',
@@ -85,6 +86,11 @@ async function loadDatabaseAsync(): Promise<AppData> {
       adminAcc.isLocked = false;
       adminAcc.role = 'admin';
     }
+  }
+
+  // Khởi tạo lịch sử truy cập mẫu nếu chưa có
+  if (!loadedData.accessLogs || loadedData.accessLogs.length === 0) {
+    loadedData.accessLogs = JSON.parse(JSON.stringify(INITIAL_APP_DATA.accessLogs || []));
   }
 
   return loadedData;
@@ -169,7 +175,7 @@ async function startServer() {
         id: 'acc_admin',
         username: 'admin',
         passwordHash: 'admin123',
-        displayName: 'Cô Thu Thủy (GVCN)',
+        displayName: 'Thầy Nguyễn Văn Thủy (GVCN)',
         role: 'admin',
         isLocked: false,
         createdAt: '2026-09-01T07:00:00Z',
@@ -188,32 +194,69 @@ async function startServer() {
     if (account.isLocked) return res.status(403).json({ error: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Giáo viên chủ nhiệm.' });
     
     account.lastLogin = new Date().toISOString();
+
+    // Ghi nhận phiên truy cập vào AccessSessionLog (thời gian, ngày giờ, thiết bị)
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    let device = 'Máy tính (Web Browser)';
+    if (/iphone|ipad|ipod/i.test(userAgent)) {
+      device = 'Điện thoại (iPhone - Safari)';
+    } else if (/android/i.test(userAgent)) {
+      device = 'Điện thoại (Android - Chrome)';
+    } else if (/macintosh|mac os/i.test(userAgent)) {
+      device = 'Máy tính (macOS - Safari)';
+    } else if (/windows/i.test(userAgent)) {
+      device = 'Máy tính (Windows 11 - Chrome)';
+    }
+
+    const sessionLog: AccessSessionLog = {
+      id: `sess_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId: account.id,
+      username: account.username,
+      displayName: account.displayName,
+      role: account.role,
+      teamId: account.teamId,
+      loginTime: new Date().toISOString(),
+      lastActiveTime: new Date().toISOString(),
+      durationSeconds: 10, // Khởi tạo phiên
+      device,
+      isOnline: true,
+      actionsCount: 1,
+    };
+
+    if (!dbData.accessLogs) dbData.accessLogs = [];
+    dbData.accessLogs.unshift(sessionLog);
+    if (dbData.accessLogs.length > 500) dbData.accessLogs = dbData.accessLogs.slice(0, 500);
+
     saveDatabase(dbData);
-    addAuditLog(account.id, account.displayName, account.role, 'Đăng nhập', `Đăng nhập thành công vào hệ thống`);
+    addAuditLog(account.id, account.displayName, account.role, 'Đăng nhập', `Đăng nhập thành công vào hệ thống (${device})`);
     
     const safeUser = { ...account, passwordHash: undefined };
-    res.json({ user: safeUser, token: `token_${account.id}_${Date.now()}` });
+    res.json({ user: safeUser, token: `token_${account.id}_${Date.now()}`, sessionId: sessionLog.id });
   });
 
   app.post('/api/auth/change-password', (req: Request, res: Response) => {
     const { userId, oldPassword, oldPass, newPassword, newPass, isAdminReset } = req.body;
-    const currentOldPass = (oldPassword !== undefined ? oldPassword : oldPass) || '';
-    const currentNewPass = (newPassword !== undefined ? newPassword : newPass) || '';
+    
+    // Nhận cả 2 biến oldPassword hoặc oldPass từ client gửi lên
+    const currentOldPass = oldPassword !== undefined ? oldPassword : (oldPass !== undefined ? oldPass : '');
+    const currentNewPass = newPassword !== undefined ? newPassword : (newPass !== undefined ? newPass : '');
 
     const account = dbData.accounts.find(a => a.id === userId);
     if (!account) return res.status(404).json({ error: 'Không tìm thấy tài khoản.' });
     
     if (!isAdminReset) {
       // ĐÃ VÁ LỖI CỬA SAU: Bắt buộc mật khẩu cũ nhập vào phải khớp 100% với mật khẩu hiện tại trên DB
-      const isOldMatch = account.passwordHash === currentOldPass;
+      const cleanOld = String(currentOldPass).trim();
+      const isOldMatch = account.passwordHash === currentOldPass || (cleanOld !== '' && account.passwordHash === cleanOld);
       if (!isOldMatch) {
         return res.status(400).json({ error: 'Mật khẩu cũ không đúng.' });
       }
     }
 
-    if (!currentNewPass || currentNewPass.length < 4) return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 4 ký tự.' });
+    const cleanNew = String(currentNewPass).trim();
+    if (!cleanNew || cleanNew.length < 4) return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 4 ký tự.' });
     
-    account.passwordHash = currentNewPass;
+    account.passwordHash = cleanNew;
     saveDatabase(dbData);
     addAuditLog(userId, account.displayName, account.role, 'Đổi mật khẩu', 'Đã thay đổi mật khẩu thành công');
     res.json({ success: true, message: 'Đổi mật khẩu thành công.' });
@@ -715,7 +758,7 @@ async function startServer() {
       target: target || 'all',
       priority: priority || 'normal',
       createdAt: new Date().toISOString(),
-      createdBy: createdBy || 'Cô Thu Thủy (GVCN)',
+      createdBy: createdBy || 'Thầy Nguyễn Văn Thủy (GVCN)',
     };
     
     dbData.announcements.unshift(ann);
@@ -731,6 +774,56 @@ async function startServer() {
       dbData.announcements.splice(index, 1);
       saveDatabase(dbData);
     }
+    res.json({ success: true });
+  });
+
+  // --- ACCESS LOGS & SESSION TRACKING (LỊCH SỬ TRUY CẬP & THỜI LƯỢNG) ---
+  app.get('/api/access-logs', (_req: Request, res: Response) => {
+    res.json({ accessLogs: dbData.accessLogs || [] });
+  });
+
+  app.post('/api/access-logs/session-ping', (req: Request, res: Response) => {
+    const { sessionId, durationSeconds, actionsCount } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'Thiếu mã phiên truy cập.' });
+    if (!dbData.accessLogs) dbData.accessLogs = [];
+
+    const session = dbData.accessLogs.find(s => s.id === sessionId);
+    if (session) {
+      session.lastActiveTime = new Date().toISOString();
+      if (durationSeconds !== undefined && Number(durationSeconds) > session.durationSeconds) {
+        session.durationSeconds = Math.round(Number(durationSeconds));
+      }
+      if (actionsCount !== undefined && Number(actionsCount) > (session.actionsCount || 0)) {
+        session.actionsCount = Number(actionsCount);
+      }
+      session.isOnline = true;
+      saveDatabase(dbData);
+      return res.json({ success: true, session });
+    }
+    res.json({ success: false, message: 'Không tìm thấy phiên' });
+  });
+
+  app.post('/api/access-logs/logout', (req: Request, res: Response) => {
+    const { sessionId, durationSeconds } = req.body;
+    if (sessionId && dbData.accessLogs) {
+      const session = dbData.accessLogs.find(s => s.id === sessionId);
+      if (session) {
+        session.isOnline = false;
+        session.lastActiveTime = new Date().toISOString();
+        if (durationSeconds !== undefined && Number(durationSeconds) > session.durationSeconds) {
+          session.durationSeconds = Math.round(Number(durationSeconds));
+        }
+        saveDatabase(dbData);
+      }
+    }
+    res.json({ success: true });
+  });
+
+  app.delete('/api/access-logs', (req: Request, res: Response) => {
+    const { adminName } = req.body;
+    dbData.accessLogs = [];
+    saveDatabase(dbData);
+    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa lịch sử truy cập', 'Đã làm mới toàn bộ nhật ký lịch sử truy cập');
     res.json({ success: true });
   });
 
@@ -832,7 +925,7 @@ async function startServer() {
 
   app.put('/api/campaigns/:id/participant', (req: Request, res: Response) => {
     const { id } = req.params;
-    const { studentId, status, note, submittedAt, updatedBy } = req.body;
+    const { studentId, status, note, submittedAt, updatedBy, customPoints, appliedDirectly, transactionId, pointsAwarded } = req.body;
     
     if (!dbData.campaigns) dbData.campaigns = [];
     
@@ -854,6 +947,10 @@ async function startServer() {
     
     if (status) p.status = status;
     if (note !== undefined) p.note = note;
+    if (customPoints !== undefined) p.customPoints = customPoints;
+    if (appliedDirectly !== undefined) p.appliedDirectly = appliedDirectly;
+    if (transactionId !== undefined) p.transactionId = transactionId;
+    if (pointsAwarded !== undefined) p.pointsAwarded = pointsAwarded;
     
     if (submittedAt !== undefined) {
       p.submittedAt = submittedAt;
@@ -869,7 +966,7 @@ async function startServer() {
 
   app.put('/api/campaigns/:id/batch-participants', (req: Request, res: Response) => {
     const { id } = req.params;
-    const { studentIds, status, note } = req.body;
+    const { studentIds, status, note, customPoints } = req.body;
     
     if (!dbData.campaigns) dbData.campaigns = [];
     
@@ -893,6 +990,7 @@ async function startServer() {
       if (p) {
         p.status = status;
         if (note !== undefined) p.note = note;
+        if (customPoints !== undefined) p.customPoints = customPoints;
         
         if (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') {
           p.submittedAt = p.submittedAt || nowIso;
@@ -921,8 +1019,14 @@ async function startServer() {
       dbData.transactions = dbData.transactions.filter(t => !prevTxIds.has(t.id));
     }
     
-    const typeLabelMap: Record<string, string> = { cuoc_thi: 'Cuộc thi', chien_dich: 'Chiến dịch', nop_bai: 'Nộp bài', phong_trao: 'Phong trào' };
-    const typeLabel = typeLabelMap[camp.type] || 'Cuộc thi';
+    const typeLabelMap: Record<string, string> = { 
+      cuoc_thi: 'Cuộc thi', 
+      chien_dich: 'Chiến dịch', 
+      nop_bai: 'Nộp bài', 
+      phong_trao: 'Phong trào',
+      lao_dong_su_kien: 'Lao động / Sự kiện'
+    };
+    const typeLabel = typeLabelMap[camp.type] || 'Cuộc thi / Sự kiện';
     
     let appliedCount = 0;
     const nowIso = new Date().toISOString();
@@ -932,26 +1036,27 @@ async function startServer() {
       let signedPoints = 0;
       let statusDesc = '';
       let txType: 'cong' | 'tru' | 'bieu_duong' = 'cong';
+      const isLaoDong = camp.type === 'lao_dong_su_kien';
       
       if (p.status === 'da_nop') {
-        signedPoints = camp.rewardPoints;
-        statusDesc = 'Đã nộp đúng hạn / Hoàn thành';
-        txType = 'cong';
+        signedPoints = p.customPoints !== undefined ? p.customPoints : camp.rewardPoints;
+        statusDesc = isLaoDong ? 'Tham gia lao động / sự kiện đúng giờ' : 'Đã nộp đúng hạn / Hoàn thành';
+        txType = signedPoints < 0 ? 'tru' : 'cong';
       } else if (p.status === 'xuat_sac') {
-        signedPoints = camp.rewardPoints + camp.bonusPoints;
-        statusDesc = 'Hoàn thành xuất sắc / Đạt giải cao';
+        signedPoints = p.customPoints !== undefined ? p.customPoints : (camp.rewardPoints + camp.bonusPoints);
+        statusDesc = isLaoDong ? 'Lao động tích cực / Hoàn thành xuất sắc' : 'Hoàn thành xuất sắc / Đạt giải cao';
         txType = 'bieu_duong';
       } else if (p.status === 'nop_muon') {
-        signedPoints = -camp.latePenaltyPoints;
-        statusDesc = 'Nộp muộn so với quy định';
+        signedPoints = p.customPoints !== undefined ? -Math.abs(p.customPoints) : -camp.latePenaltyPoints;
+        statusDesc = isLaoDong ? 'Đi muộn trong buổi lao động / sự kiện' : 'Nộp muộn so với quy định';
         txType = 'tru';
       } else if (p.status === 'khong_tham_gia') {
-        signedPoints = -camp.missPenaltyPoints;
-        statusDesc = 'Không tham gia / Không nộp bài';
+        signedPoints = p.customPoints !== undefined ? -Math.abs(p.customPoints) : -camp.missPenaltyPoints;
+        statusDesc = isLaoDong ? 'Không đi lao động / vắng mặt sự kiện' : 'Không tham gia / Không nộp bài';
         txType = 'tru';
       } else if (p.status === 'chua_nop' && includeUnsubmitted) {
-        signedPoints = -camp.missPenaltyPoints;
-        statusDesc = 'Quá hạn chưa hoàn thành';
+        signedPoints = p.customPoints !== undefined ? -Math.abs(p.customPoints) : -camp.missPenaltyPoints;
+        statusDesc = isLaoDong ? 'Không tham gia / vắng mặt' : 'Quá hạn chưa hoàn thành';
         txType = 'tru';
       }
       
@@ -966,28 +1071,30 @@ async function startServer() {
             type: txType,
             title: `[${typeLabel}: ${camp.title}] - ${statusDesc}`,
             points: signedPoints,
-            category: camp.type === 'nop_bai' ? 'Học tập' : camp.type === 'cuoc_thi' ? 'Văn thể mỹ' : 'Hoạt động chung',
-            notes: p.note ? `${p.note} (Hạn chót: ${camp.endDate})` : `Ghi nhận tự động từ ${camp.title}`,
+            category: camp.type === 'nop_bai' ? 'Học tập' : camp.type === 'lao_dong_su_kien' ? 'Lao động & Vệ sinh' : camp.type === 'cuoc_thi' ? 'Văn thể mỹ' : 'Hoạt động chung',
+            notes: p.note ? `${p.note} (Thời gian: ${camp.startDate || camp.endDate})` : `Ghi nhận từ ${camp.title}`,
             createdByUserId: userId || 'acc_admin',
             createdByRole: adminRole || 'admin',
             createdByName: adminName || 'GVCN & Cán sự',
             createdAt: nowIso,
-            occurredDate: camp.endDate,
+            occurredDate: camp.startDate || camp.endDate,
             dayOfWeek: 'Thứ Hai',
             weekNumber: targetWeek,
             month: dbData.config.currentMonth || 10,
             status: 'approved',
             reviewedBy: adminName || 'GVCN',
-            reviewedAt: nowIso
+            reviewedAt: nowIso,
           };
           dbData.transactions.unshift(tx);
           p.transactionId = tx.id;
           p.pointsAwarded = signedPoints;
+          p.appliedDirectly = true;
           appliedCount++;
         }
       } else {
         p.transactionId = undefined;
         p.pointsAwarded = 0;
+        p.appliedDirectly = false;
       }
     });
     
@@ -1065,7 +1172,7 @@ async function startServer() {
       category: category || 'Chung',
       rating: rating || 'Tốt',
       authorId: authorId || 'acc_admin',
-      authorName: authorName || 'Cô Thu Thủy (GVCN)',
+      authorName: authorName || 'Thầy Nguyễn Văn Thủy (GVCN)',
       authorRole: authorRole || 'admin',
       createdAt: new Date().toISOString(),
     };

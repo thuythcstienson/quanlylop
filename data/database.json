@@ -1,4 +1,5 @@
 {
+  "_id": "6ac222ec364f76d41a9466cf",
   "config": {
     "schoolName": "THCS Vân Hà 2",
     "className": "9A1",
@@ -13,570 +14,848 @@
     "allowParentViewRank": true,
     "currentWeek": 4,
     "currentMonth": 10,
-    "startDate": "2026-09-07"
+    "startDate": "2026-09-07",
+    "rolePermissions": {
+      "admin": {
+        "canCreatePoints": true,
+        "canReviewPoints": true,
+        "canDeletePoints": true,
+        "canDeletePeriodPoints": true,
+        "canManageStudents": true,
+        "canDeleteStudents": true,
+        "canAppointOfficers": true,
+        "canDivideTeams": true,
+        "canCreateCampaign": true,
+        "canEditCampaign": true,
+        "canDeleteCampaign": true,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": true,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": true,
+        "canManageRules": true,
+        "canManageAccounts": true,
+        "canBackupRestore": true
+      },
+      "lop_truong": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": true,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "lop_pho_ht": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": true,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "lop_pho_nn": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": true,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "lop_pho_vtm": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": true,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "to_truong": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": false,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "to_pho": {
+        "canCreatePoints": true,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": false,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": true,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": true,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "hoc_sinh": {
+        "canCreatePoints": false,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": false,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": false,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": false,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      },
+      "phu_huynh": {
+        "canCreatePoints": false,
+        "canReviewPoints": false,
+        "canDeletePoints": false,
+        "canDeletePeriodPoints": false,
+        "canManageStudents": false,
+        "canDeleteStudents": false,
+        "canAppointOfficers": false,
+        "canDivideTeams": false,
+        "canCreateCampaign": false,
+        "canEditCampaign": false,
+        "canDeleteCampaign": false,
+        "canMarkSubmissions": false,
+        "canApplyCampaignPoints": false,
+        "canEvaluateStudents": false,
+        "canDeleteEvaluation": false,
+        "canManageRules": false,
+        "canManageAccounts": false,
+        "canBackupRestore": false
+      }
+    },
+    "schoolRank": 1,
+    "schoolTotalClasses": 24
   },
   "students": [
     {
-      "id": "hs_1791041342328_7jrm",
+      "id": "hs_1791082401640_139g",
       "stt": 1,
       "name": "Lưu Thị Tường An",
       "gender": "Nữ",
       "birthDate": "17/09/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 2,
+      "roleTitle": "Lớp phó học tập",
+      "parentName": "Nguyễn Thị Lơi",
       "parentPhone": "0978660365",
-      "notes": ""
+      "notes": "Gương mẫu, học giỏi toàn diện"
     },
     {
-      "id": "hs_1791041342328_u4kb",
+      "id": "hs_1791082401641_1bim",
       "stt": 2,
       "name": "Nguyễn Bảo An",
       "gender": "Nữ",
       "birthDate": "01/08/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
+      "birthPlace": "",
+      "permanentAddress": "Thần chúc",
+      "teamId": 4,
+      "roleTitle": "Tổ trưởng",
+      "parentName": "Lưu Thị Vân",
       "parentPhone": "0369837906",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_nf38",
+      "id": "hs_1791082401641_zbt6",
       "stt": 3,
       "name": "Lý Ngọc Anh",
       "gender": "Nữ",
       "birthDate": "07/10/2012",
+      "birthPlace": "",
+      "permanentAddress": "Thượng lát",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Dương Thị Hằng",
       "parentPhone": "0382655995",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_fr3o",
+      "id": "hs_1791082401641_5gud",
       "stt": 4,
       "name": "Nguyễn Quốc Bảo",
       "gender": "Nam",
       "birthDate": "10/10/2012",
+      "birthPlace": "",
+      "permanentAddress": "Lương Viên",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0356107585",
+      "parentName": "Nguyễn Thị Hà",
+      "parentPhone": "0349355528",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_7joh",
+      "id": "hs_1791082401641_bgrk",
       "stt": 5,
       "name": "Trần Duy Bảo",
       "gender": "Nam",
       "birthDate": "03/12/2012",
+      "birthPlace": "",
+      "permanentAddress": "Kim Sơn",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Bích",
       "parentPhone": "0376927285",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_8pss",
+      "id": "hs_1791082401641_malf",
       "stt": 6,
       "name": "Nguyễn Anh Đức",
       "gender": "Nam",
       "birthDate": "18/11/2012",
+      "birthPlace": "",
+      "permanentAddress": "Kim Sơn",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0981147830",
+      "parentName": "Cáp Thị Phương",
+      "parentPhone": "0965128766",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_9uw1",
+      "id": "hs_1791082401641_c7yz",
       "stt": 7,
       "name": "Dương Văn Hải",
       "gender": "Nam",
       "birthDate": "27/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Vân",
       "parentPhone": "0967138297",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_p8rx",
+      "id": "hs_1791082401641_qeql",
       "stt": 8,
       "name": "Dương Mai Hạnh",
       "gender": "Nữ",
       "birthDate": "27/06/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Hương",
       "parentPhone": "0974965217",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_f9wc",
+      "id": "hs_1791082401641_ets3",
       "stt": 9,
       "name": "Đỗ Thị Thu Hằng",
       "gender": "Nữ",
       "birthDate": "12/10/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 3,
+      "roleTitle": "Tổ trưởng",
+      "parentName": "Nguyễn Thị Thuý",
       "parentPhone": "0974461639",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_wcx7",
+      "id": "hs_1791082401641_1a7h",
       "stt": 10,
       "name": "NguyễnThị Minh Hằng",
       "gender": "Nữ",
       "birthDate": "07/10/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0966316123",
+      "parentName": "Nguyễn Thị Hường",
+      "parentPhone": "",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_ebg8",
+      "id": "hs_1791082401641_hx3f",
       "stt": 11,
       "name": "Phạm Thị Hằng",
       "gender": "Nữ",
       "birthDate": "06/04/2012",
+      "birthPlace": "",
+      "permanentAddress": "Lương Viên",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Nghị",
       "parentPhone": "0368414840",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_gyiz",
+      "id": "hs_1791082401641_8lss",
       "stt": 12,
       "name": "Phạm Thị Bích Hằng",
       "gender": "Nữ",
       "birthDate": "05/08/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Lương viên",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Trịnh thị Hồng",
       "parentPhone": "0977230428",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_z47e",
+      "id": "hs_1791082401641_hpfu",
       "stt": 13,
       "name": "Nguyễn Ngọc Hiếu",
       "gender": "Nam",
       "birthDate": "31/08/2012",
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Xuân",
       "parentPhone": "0386574523",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_642g",
+      "id": "hs_1791082401641_rijt",
       "stt": 14,
       "name": "Nguyễn Văn Hiếu",
       "gender": "Nam",
       "birthDate": "14/11/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Hưng",
       "parentPhone": "0976821693",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_dtfl",
+      "id": "hs_1791082401641_j0a9",
       "stt": 15,
       "name": "Dương Kiều Hoàng",
       "gender": "Nam",
       "birthDate": "11/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0974936022",
+      "parentName": "Ngô Thị Thu",
+      "parentPhone": "0355062858",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_6m0c",
+      "id": "hs_1791082401641_csqi",
       "stt": 16,
       "name": "Nguyễn Thị Bích Huệ",
       "gender": "Nữ",
       "birthDate": "23/10/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Leo Thị Lan",
       "parentPhone": "0363688162",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_cxkm",
+      "id": "hs_1791082401641_6im7",
       "stt": 17,
       "name": "Dương Kiều Huy",
       "gender": "Nam",
       "birthDate": "11/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0974936022",
+      "parentName": "Ngô Thị Thu",
+      "parentPhone": "0355062858",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_t0cd",
+      "id": "hs_1791082401641_hqu7",
       "stt": 18,
       "name": "Hoàng Gia Huy",
       "gender": "Nam",
       "birthDate": "05/03/2012",
+      "birthPlace": "",
+      "permanentAddress": "Kim Sơn",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Hoàng Thị Thu Hà",
       "parentPhone": "0843547388",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_y0ur",
+      "id": "hs_1791082401641_w808",
       "stt": 19,
       "name": "Dương Tôn Thượng Hương",
       "gender": "Nữ",
       "birthDate": "12/06/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Phan Thị Thắm",
       "parentPhone": "0968571129",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_o8yf",
+      "id": "hs_1791082401641_4go9",
       "stt": 20,
       "name": "Nguyễn Thị Hương",
       "gender": "Nữ",
       "birthDate": "07/09/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0971183144",
+      "parentName": "Nguyễn Thị Lan",
+      "parentPhone": "0971193144",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_y4zq",
+      "id": "hs_1791082401641_z24b",
       "stt": 21,
       "name": "Dương Khánh Linh",
       "gender": "Nữ",
       "birthDate": "21/04/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0359353898",
+      "parentName": "Dương Thị Nga",
+      "parentPhone": "0329357233",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_4yil",
+      "id": "hs_1791082401641_j0l1",
       "stt": 22,
       "name": "Dương Thị Ngọc Linh",
       "gender": "Nữ",
       "birthDate": "25/09/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn T Ngọc Liên",
       "parentPhone": "0974662890",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_jrdj",
+      "id": "hs_1791082401641_95dw",
       "stt": 23,
       "name": "Nguyễn Thị Nhật Linh",
       "gender": "Nữ",
       "birthDate": "03/12/2012",
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Leo Thị Thanh",
       "parentPhone": "0989018120",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_d8wp",
+      "id": "hs_1791082401641_pc58",
       "stt": 24,
       "name": "PhạmThị Thùy Linh",
       "gender": "Nữ",
       "birthDate": "29/01/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0985482656",
-      "notes": ""
+      "parentName": "Nhữ Thị Thùy",
+      "parentPhone": "",
+      "notes": "cờ đỏ"
     },
     {
-      "id": "hs_1791041342328_mask",
+      "id": "hs_1791082401641_zle6",
       "stt": 25,
       "name": "Nguyễn Ngọc Long",
       "gender": "Nam",
       "birthDate": "06/03/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Dương Thị Hằng",
       "parentPhone": "0989559066",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_e1ac",
+      "id": "hs_1791082401641_y2vb",
       "stt": 26,
       "name": "Trần Thị Phương Mai",
       "gender": "Nữ",
       "birthDate": "08/07/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Kim Sơn",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0357559632",
+      "parentName": "Nguyễn Thị Hồng",
+      "parentPhone": "0976875241",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_3kmi",
+      "id": "hs_1791082401641_8vu8",
       "stt": 27,
       "name": "Nguyễn Thị Trà My",
       "gender": "Nữ",
       "birthDate": "11/11/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Hoàng Thị Ngọc",
       "parentPhone": "0357182737",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_bfkq",
+      "id": "hs_1791082401641_vv4m",
       "stt": 28,
       "name": "Nguyễn Đình Nam",
       "gender": "Nam",
       "birthDate": "05/04/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Lương Viên",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Lê Hoàng Tiệp",
       "parentPhone": "0363050018",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_imap",
+      "id": "hs_1791082401641_bt5z",
       "stt": 29,
       "name": "Nguyễn Thị Hằng Nga",
       "gender": "Nữ",
       "birthDate": "28/05/2012",
+      "birthPlace": "",
+      "permanentAddress": "Hạ lát",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0359927873",
+      "parentName": "Hoàng Thị Là",
+      "parentPhone": "",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_nrfa",
+      "id": "hs_1791082401641_8pkb",
       "stt": 30,
       "name": "Bùi Bích Ngọc",
       "gender": "Nữ",
       "birthDate": "14/09/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Phạm Thị Hạ",
       "parentPhone": "0395147628",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_wyxr",
+      "id": "hs_1791082401641_9m3u",
       "stt": 31,
       "name": "Lưu Thị Bảo Ngọc",
       "gender": "Nữ",
       "birthDate": "12/01/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Tươi",
       "parentPhone": "0384019469",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_q82a",
+      "id": "hs_1791082401641_i7th",
       "stt": 32,
       "name": "Vũ Bảo Ngọc",
       "gender": "Nữ",
       "birthDate": "25/11/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Lương Viên",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0948393556",
+      "parentName": "Nguyễn Thị Vịnh",
+      "parentPhone": "0978390019",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_ka0q",
+      "id": "hs_1791082401641_0fl4",
       "stt": 33,
       "name": "Dương Thị Hà Nguyên",
       "gender": "Nữ",
       "birthDate": "07/08/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0866678799",
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 2,
+      "roleTitle": "Tổ trưởng",
+      "parentName": "Nguyễn Thị Hồi",
+      "parentPhone": "0969306159",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_rate",
+      "id": "hs_1791082401641_4fm0",
       "stt": 34,
       "name": "Hoàng Thị Minh Nguyệt",
       "gender": "Nữ",
       "birthDate": "04/10/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 3,
+      "roleTitle": "Lớp phó nề nếp",
+      "parentName": "Nguyễn Thị Nhàn",
       "parentPhone": "0389186047",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_thgu",
+      "id": "hs_1791082401641_qhdo",
       "stt": 35,
       "name": "Dương Băng Nhi",
       "gender": "Nữ",
       "birthDate": "30/11/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Bế Thị Tươi",
       "parentPhone": "0374636235",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_4stz",
+      "id": "hs_1791082401641_ktph",
       "stt": 36,
       "name": "Dương Thị Linh Nhi",
       "gender": "Nữ",
       "birthDate": "27/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Thắm",
       "parentPhone": "0328495460",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_line",
+      "id": "hs_1791082401641_zaus",
       "stt": 37,
       "name": "Dương Uyển Nhi",
       "gender": "Nữ",
       "birthDate": "25/06/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Dương Thị Uyên",
       "parentPhone": "0978086814",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_bzo9",
+      "id": "hs_1791082401641_ajy0",
       "stt": 38,
       "name": "Nguyễn Thị Lan Phương",
       "gender": "Nữ",
       "birthDate": "29/07/2012",
+      "birthPlace": "",
+      "permanentAddress": "Thần Chúc",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Hồng Nhung",
       "parentPhone": "0332220259",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_rf2v",
+      "id": "hs_1791082401641_7m4y",
       "stt": 39,
       "name": "Tạ Thục Quyên",
       "gender": "Nữ",
       "birthDate": "17/04/2012",
-      "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0976838599",
+      "birthPlace": "",
+      "permanentAddress": "Phù Tài",
+      "teamId": 3,
+      "roleTitle": "lớp trưởng",
+      "parentName": "Đỗ Thị Nhâm",
+      "parentPhone": "0987852882",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_4cpi",
+      "id": "hs_1791082401641_ltwu",
       "stt": 40,
       "name": "Nguyễn Thị Sâm",
       "gender": "Nữ",
       "birthDate": "11/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Lương Viên",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Hà Thị Hậu",
       "parentPhone": "0368793946",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_iza0",
+      "id": "hs_1791082401641_bn2z",
       "stt": 41,
       "name": "Ngô Thanh Thảo",
       "gender": "Nữ",
       "birthDate": "08/05/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Nguyệt",
       "parentPhone": "0366991203",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_7k2x",
+      "id": "hs_1791082401641_whiw",
       "stt": 42,
       "name": "Dương Thị Minh Trang",
       "gender": "Nữ",
       "birthDate": "21/08/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 3,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Lan",
       "parentPhone": "0978128388",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_yya3",
+      "id": "hs_1791082401641_yi74",
       "stt": 43,
       "name": "Hoàng Mai Trang",
       "gender": "Nữ",
       "birthDate": "06/01/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Thượng Lát",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Nguyễn Thị Huyền",
       "parentPhone": "0936744158",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_x1z5",
+      "id": "hs_1791082401641_mzl7",
       "stt": 44,
       "name": "Nguyễn Thị Quỳnh Trang",
       "gender": "Nữ",
       "birthDate": "08/08/2012",
+      "birthPlace": "",
+      "permanentAddress": "Phù Tài",
       "teamId": 1,
-      "roleTitle": "Thành viên",
-      "parentName": "",
+      "roleTitle": "Tổ trưởng",
+      "parentName": "Ngô Thị Lừng",
       "parentPhone": "0986443330",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_uo59",
+      "id": "hs_1791082401641_g8x8",
       "stt": 45,
       "name": "Dương Văn Trọng",
       "gender": "Nam",
       "birthDate": "04/08/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
+      "teamId": 2,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Diêm Thị Vui",
       "parentPhone": "0376542240",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_s2fq",
+      "id": "hs_1791082401641_iwu6",
       "stt": 46,
       "name": "Hà Phú Trọng",
       "gender": "Nam",
       "birthDate": "12/12/2012",
-      "teamId": 1,
+      "birthPlace": "",
+      "permanentAddress": "SN 45, Nguyễn Huy Bính, TDP Thành Ngang, Phường Xương Giang , TPBG",
+      "teamId": 4,
       "roleTitle": "Thành viên",
-      "parentName": "",
-      "parentPhone": "0989751753",
+      "parentName": "Nguyễn Thị Thanh Hải",
+      "parentPhone": "0338961246",
       "notes": ""
     },
     {
-      "id": "hs_1791041342328_qj1d",
+      "id": "hs_1791082401641_s994",
       "stt": 47,
       "name": "Dương Thanh Trúc",
       "gender": "Nữ",
       "birthDate": "08/11/2012",
+      "birthPlace": "",
+      "permanentAddress": "Hạ Lát",
       "teamId": 1,
       "roleTitle": "Thành viên",
-      "parentName": "",
+      "parentName": "Dương Thị Trang",
       "parentPhone": "0378551125",
       "notes": ""
     }
@@ -744,15 +1023,15 @@
       "email": "thuythcstienson@gmail.com",
       "notes": "",
       "title": "",
-      "lastLogin": "2026-10-03T16:11:38.300Z"
+      "lastLogin": "2026-10-04T14:03:24.025Z"
     },
     {
       "id": "acc_loptruong",
       "username": "loptruong",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Nguyễn Đức Minh (Lớp trưởng)",
       "role": "lop_truong",
-      "isLocked": false,
+      "isLocked": true,
       "createdAt": "2026-09-01T07:00:00Z",
       "studentId": "hs_01",
       "teamId": 1
@@ -760,7 +1039,7 @@
     {
       "id": "acc_loppho_ht",
       "username": "loppho_ht",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Trần Thị Mai Phương (LP Học tập)",
       "role": "lop_pho_ht",
       "isLocked": false,
@@ -771,7 +1050,7 @@
     {
       "id": "acc_loppho_nn",
       "username": "loppho_nn",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Lê Hoàng Nam (LP Nề nếp)",
       "role": "lop_pho_nn",
       "isLocked": false,
@@ -782,18 +1061,19 @@
     {
       "id": "acc_totruong1",
       "username": "totruong1",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Vũ Quốc Bảo (Tổ trưởng 1)",
       "role": "to_truong",
       "teamId": 1,
       "isLocked": false,
       "createdAt": "2026-09-01T07:00:00Z",
-      "studentId": "hs_02"
+      "studentId": "hs_02",
+      "lastLogin": "2026-10-04T13:29:33.216Z"
     },
     {
       "id": "acc_totruong2",
       "username": "totruong2",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Đặng Minh Quân (Tổ trưởng 2)",
       "role": "to_truong",
       "teamId": 2,
@@ -804,7 +1084,7 @@
     {
       "id": "acc_totruong3",
       "username": "totruong3",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Bùi Hải Đăng (Tổ trưởng 3)",
       "role": "to_truong",
       "teamId": 3,
@@ -815,7 +1095,7 @@
     {
       "id": "acc_totruong4",
       "username": "totruong4",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Dương Gia Huy (Tổ trưởng 4)",
       "role": "to_truong",
       "teamId": 4,
@@ -826,7 +1106,7 @@
     {
       "id": "acc_hocsinh",
       "username": "hocsinh",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Học sinh Nguyễn Văn An",
       "role": "hoc_sinh",
       "isLocked": false,
@@ -837,13 +1117,73 @@
     {
       "id": "acc_phuhuynh",
       "username": "phuhuynh",
-      "passwordHash": "123456",
+      "passwordHash": "***",
       "displayName": "Phụ huynh HS Nguyễn Văn An",
       "role": "phu_huynh",
       "isLocked": false,
       "createdAt": "2026-09-01T07:00:00Z",
       "studentId": "hs_04",
       "teamId": 1
+    },
+    {
+      "id": "acc_1791082670480_i1k",
+      "username": "tathucquyen",
+      "passwordHash": "***",
+      "displayName": "Tạ Thục Quyên (Lớp trưởng)",
+      "role": "lop_truong",
+      "studentId": "hs_1791082401641_7m4y",
+      "isLocked": false,
+      "createdAt": "2026-10-04T02:57:50.480Z",
+      "lastLogin": "2026-10-04T13:36:01.615Z",
+      "phone": "",
+      "email": "",
+      "notes": "",
+      "title": "Lớp trưởng"
+    },
+    {
+      "id": "acc_1791082775047_xgi",
+      "username": "luuthituongan",
+      "passwordHash": "***",
+      "displayName": "Lưu Thị Tường An (LP Học tập)",
+      "role": "lop_pho_ht",
+      "studentId": "hs_1791082401640_139g",
+      "isLocked": false,
+      "createdAt": "2026-10-04T02:59:35.047Z",
+      "lastLogin": "2026-10-04T13:40:15.600Z"
+    },
+    {
+      "id": "acc_1791082800183_eva",
+      "username": "nguyenthiquynhtrang",
+      "passwordHash": "***",
+      "displayName": "Nguyễn Thị Quỳnh Trang (Tổ trưởng 1)",
+      "role": "to_truong",
+      "teamId": 1,
+      "studentId": "hs_1791082401641_mzl7",
+      "isLocked": false,
+      "createdAt": "2026-10-04T03:00:00.183Z"
+    },
+    {
+      "id": "acc_1791082865310_htg",
+      "username": "hoangthiminhnguyet",
+      "passwordHash": "***",
+      "displayName": "Hoàng Thị Minh Nguyệt",
+      "role": "to_truong",
+      "teamId": 3,
+      "studentId": "hs_1791082401641_4fm0",
+      "isLocked": false,
+      "createdAt": "2026-10-04T03:01:05.310Z",
+      "lastLogin": "2026-10-04T13:39:49.385Z"
+    },
+    {
+      "id": "acc_1791083058064_dio",
+      "username": "dothithuhang",
+      "passwordHash": "***",
+      "displayName": "Đỗ Thị Thu Hằng (Tổ trưởng 3)",
+      "role": "to_truong",
+      "teamId": 3,
+      "studentId": "hs_1791082401641_ets3",
+      "isLocked": false,
+      "createdAt": "2026-10-04T03:04:18.064Z"
     }
   ],
   "announcements": [
@@ -876,6 +1216,150 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1791122586376_42xl",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T14:03:06.376Z"
+    },
+    {
+      "id": "log_1791122454966_raax",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đổi mật khẩu",
+      "details": "Đã thay đổi mật khẩu thành công",
+      "timestamp": "2026-10-04T14:00:54.966Z"
+    },
+    {
+      "id": "log_1791121507999_maen",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:45:07.999Z"
+    },
+    {
+      "id": "log_1791121297593_3dbi",
+      "userId": "acc_1791082670480_i1k",
+      "userName": "Tạ Thục Quyên (Lớp trưởng)",
+      "role": "lop_truong",
+      "action": "Cập nhật thông tin",
+      "details": "Cập nhật thông tin cá nhân",
+      "timestamp": "2026-10-04T13:41:37.593Z"
+    },
+    {
+      "id": "log_1791121215601_23f6",
+      "userId": "acc_1791082775047_xgi",
+      "userName": "Lưu Thị Tường An (LP Học tập)",
+      "role": "lop_pho_ht",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:40:15.601Z"
+    },
+    {
+      "id": "log_1791121189386_mq7k",
+      "userId": "acc_1791082865310_htg",
+      "userName": "Hoàng Thị Minh Nguyệt",
+      "role": "to_truong",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:39:49.386Z"
+    },
+    {
+      "id": "log_1791121087934_etpw",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:38:07.934Z"
+    },
+    {
+      "id": "log_1791120961616_b700",
+      "userId": "acc_1791082670480_i1k",
+      "userName": "Tạ Thục Quyên (Lớp trưởng)",
+      "role": "lop_truong",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:36:01.616Z"
+    },
+    {
+      "id": "log_1791120903000_wp15",
+      "userId": "acc_1791082670480_i1k",
+      "userName": "Tạ Thục Quyên (Lớp trưởng)",
+      "role": "lop_truong",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:35:03.000Z"
+    },
+    {
+      "id": "log_1791120713905_rz9d",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:31:53.905Z"
+    },
+    {
+      "id": "log_1791120650132_t6dl",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:30:50.132Z"
+    },
+    {
+      "id": "log_1791120638987_ulv0",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:30:38.987Z"
+    },
+    {
+      "id": "log_1791120615450_1upy",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:30:15.450Z"
+    },
+    {
+      "id": "log_1791120573217_ta9b",
+      "userId": "acc_totruong1",
+      "userName": "Vũ Quốc Bảo (Tổ trưởng 1)",
+      "role": "to_truong",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:29:33.217Z"
+    },
+    {
+      "id": "log_1791120278487_c76y",
+      "userId": "acc_1791082670480_i1k",
+      "userName": "Tạ Thục Quyên (Lớp trưởng)",
+      "role": "lop_truong",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:24:38.487Z"
+    },
+    {
+      "id": "log_1791120256469_p229",
+      "userId": "acc_admin",
+      "userName": "Thầy Nguyễn Văn Thủy",
+      "role": "admin",
+      "action": "Đăng nhập",
+      "details": "Đăng nhập thành công vào hệ thống",
+      "timestamp": "2026-10-04T13:24:16.469Z"
+    },
     {
       "id": "log_1791043881734_xesb",
       "userId": "acc_admin",
@@ -967,956 +1451,7 @@
       "timestamp": "2026-10-03T08:10:00Z"
     }
   ],
-  "campaigns": [
-    {
-      "id": "camp_1791045627019_2654",
-      "title": "Cuộc thi Khoa học Kỹ thuật 2026",
-      "description": "",
-      "type": "cuoc_thi",
-      "startDate": "2026-10-01",
-      "endDate": "2026-10-15",
-      "weekNumber": 4,
-      "rewardPoints": 3,
-      "bonusPoints": 5,
-      "latePenaltyPoints": 2,
-      "missPenaltyPoints": 2,
-      "createdBy": "Giáo viên / Cán sự lớp",
-      "createdRole": "admin",
-      "createdAt": "2026-10-03T16:40:27.019Z",
-      "status": "active",
-      "pointsApplied": false,
-      "participants": [
-        {
-          "studentId": "hs_1791041342328_7jrm",
-          "studentName": "Lưu Thị Tường An",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_u4kb",
-          "studentName": "Nguyễn Bảo An",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_nf38",
-          "studentName": "Lý Ngọc Anh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_fr3o",
-          "studentName": "Nguyễn Quốc Bảo",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_7joh",
-          "studentName": "Trần Duy Bảo",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_8pss",
-          "studentName": "Nguyễn Anh Đức",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_9uw1",
-          "studentName": "Dương Văn Hải",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_p8rx",
-          "studentName": "Dương Mai Hạnh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_f9wc",
-          "studentName": "Đỗ Thị Thu Hằng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_wcx7",
-          "studentName": "NguyễnThị Minh Hằng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_ebg8",
-          "studentName": "Phạm Thị Hằng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_gyiz",
-          "studentName": "Phạm Thị Bích Hằng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_z47e",
-          "studentName": "Nguyễn Ngọc Hiếu",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_642g",
-          "studentName": "Nguyễn Văn Hiếu",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_dtfl",
-          "studentName": "Dương Kiều Hoàng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_6m0c",
-          "studentName": "Nguyễn Thị Bích Huệ",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_cxkm",
-          "studentName": "Dương Kiều Huy",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_t0cd",
-          "studentName": "Hoàng Gia Huy",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_y0ur",
-          "studentName": "Dương Tôn Thượng Hương",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_o8yf",
-          "studentName": "Nguyễn Thị Hương",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_y4zq",
-          "studentName": "Dương Khánh Linh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_4yil",
-          "studentName": "Dương Thị Ngọc Linh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_jrdj",
-          "studentName": "Nguyễn Thị Nhật Linh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_d8wp",
-          "studentName": "PhạmThị Thùy Linh",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_mask",
-          "studentName": "Nguyễn Ngọc Long",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_e1ac",
-          "studentName": "Trần Thị Phương Mai",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_3kmi",
-          "studentName": "Nguyễn Thị Trà My",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_bfkq",
-          "studentName": "Nguyễn Đình Nam",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_imap",
-          "studentName": "Nguyễn Thị Hằng Nga",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_nrfa",
-          "studentName": "Bùi Bích Ngọc",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_wyxr",
-          "studentName": "Lưu Thị Bảo Ngọc",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_q82a",
-          "studentName": "Vũ Bảo Ngọc",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_ka0q",
-          "studentName": "Dương Thị Hà Nguyên",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_rate",
-          "studentName": "Hoàng Thị Minh Nguyệt",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_thgu",
-          "studentName": "Dương Băng Nhi",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_4stz",
-          "studentName": "Dương Thị Linh Nhi",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_line",
-          "studentName": "Dương Uyển Nhi",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_bzo9",
-          "studentName": "Nguyễn Thị Lan Phương",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_rf2v",
-          "studentName": "Tạ Thục Quyên",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_4cpi",
-          "studentName": "Nguyễn Thị Sâm",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_iza0",
-          "studentName": "Ngô Thanh Thảo",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_7k2x",
-          "studentName": "Dương Thị Minh Trang",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_yya3",
-          "studentName": "Hoàng Mai Trang",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_x1z5",
-          "studentName": "Nguyễn Thị Quỳnh Trang",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_uo59",
-          "studentName": "Dương Văn Trọng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_s2fq",
-          "studentName": "Hà Phú Trọng",
-          "teamId": 1,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_1791041342328_qj1d",
-          "studentName": "Dương Thanh Trúc",
-          "teamId": 1,
-          "status": "chua_nop"
-        }
-      ]
-    },
-    {
-      "id": "camp_01",
-      "title": "Hội thi Làm Báo Tường Tri Ân Thầy Cô 20/11",
-      "description": "Mỗi cá nhân hoặc nhóm nộp tác phẩm (thơ, truyện ngắn, tranh vẽ, câu đối) đóng góp vào tập san/báo tường của lớp 9A1. Yêu cầu sản phẩm chỉn chu, đúng chủ đề.",
-      "type": "cuoc_thi",
-      "startDate": "2026-09-28",
-      "endDate": "2026-10-06",
-      "weekNumber": 4,
-      "rewardPoints": 3,
-      "bonusPoints": 5,
-      "latePenaltyPoints": 2,
-      "missPenaltyPoints": 3,
-      "createdBy": "Cô Thu Thủy (GVCN)",
-      "createdRole": "admin",
-      "createdAt": "2026-09-28T08:00:00Z",
-      "status": "active",
-      "pointsApplied": false,
-      "participants": [
-        {
-          "studentId": "hs_01",
-          "studentName": "Nguyễn Đức Minh",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_02",
-          "studentName": "Vũ Quốc Bảo",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_03",
-          "studentName": "Hoàng Lan Anh",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_04",
-          "studentName": "Nguyễn Văn An",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_05",
-          "studentName": "Trần Quỳnh Chi",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_06",
-          "studentName": "Đặng Tuấn Dũng",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_07",
-          "studentName": "Lê Thùy Dung",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_08",
-          "studentName": "Phạm Tiến Đạt",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_09",
-          "studentName": "Vũ Thị Diễm Hương",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_10",
-          "studentName": "Bùi Đức Khang",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_11",
-          "studentName": "Trần Thị Mai Phương",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_12",
-          "studentName": "Đặng Minh Quân",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_13",
-          "studentName": "Ngô Thùy Linh",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_14",
-          "studentName": "Phan Hoàng Long",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_15",
-          "studentName": "Đinh Khánh Ly",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_16",
-          "studentName": "Hoàng Nhật Minh",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_17",
-          "studentName": "Nguyễn Trà My",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_18",
-          "studentName": "Lê Duy Nam",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_19",
-          "studentName": "Tạ Bảo Ngọc",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_20",
-          "studentName": "Vũ Hữu Nghĩa",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_21",
-          "studentName": "Lê Hoàng Nam",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_22",
-          "studentName": "Bùi Hải Đăng",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_23",
-          "studentName": "Đỗ Ngọc Ánh",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_24",
-          "studentName": "Nguyễn Thành Phát",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_25",
-          "studentName": "Lương Thu Phương",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_26",
-          "studentName": "Trịnh Minh Quân",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Đã nộp bài viết"
-        },
-        {
-          "studentId": "hs_27",
-          "studentName": "Cao Như Quỳnh",
-          "teamId": 3,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_28",
-          "studentName": "Vũ Đức Sơn",
-          "teamId": 3,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_29",
-          "studentName": "Đào Thanh Tâm",
-          "teamId": 3,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_30",
-          "studentName": "Hà Quang Thắng",
-          "teamId": 3,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_31",
-          "studentName": "Phạm Thu Hà",
-          "teamId": 4,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_32",
-          "studentName": "Dương Gia Huy",
-          "teamId": 4,
-          "status": "xuat_sac",
-          "submittedAt": "2026-10-02T10:00:00Z",
-          "note": "Tác phẩm sáng tạo, tranh vẽ đoạt giải cấp lớp"
-        },
-        {
-          "studentId": "hs_33",
-          "studentName": "Lý Thảo My",
-          "teamId": 4,
-          "status": "nop_muon",
-          "submittedAt": "2026-10-03T15:30:00Z",
-          "note": "Nộp sau hạn quy định"
-        },
-        {
-          "studentId": "hs_34",
-          "studentName": "Tạ Minh Tuấn",
-          "teamId": 4,
-          "status": "nop_muon",
-          "submittedAt": "2026-10-03T15:30:00Z",
-          "note": "Nộp sau hạn quy định"
-        },
-        {
-          "studentId": "hs_35",
-          "studentName": "Mai Phương Uyên",
-          "teamId": 4,
-          "status": "nop_muon",
-          "submittedAt": "2026-10-03T15:30:00Z",
-          "note": "Nộp sau hạn quy định"
-        },
-        {
-          "studentId": "hs_36",
-          "studentName": "Đoàn Quang Vinh",
-          "teamId": 4,
-          "status": "nop_muon",
-          "submittedAt": "2026-10-03T15:30:00Z",
-          "note": "Nộp sau hạn quy định"
-        },
-        {
-          "studentId": "hs_37",
-          "studentName": "Phùng Hải Yến",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_38",
-          "studentName": "Nguyễn Tấn Dũng",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_39",
-          "studentName": "Hoàng Diệu Linh",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_40",
-          "studentName": "Lê Anh Khoa",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_41",
-          "studentName": "Trịnh Tuyết Mai",
-          "teamId": 4,
-          "status": "chua_nop"
-        }
-      ]
-    },
-    {
-      "id": "camp_02",
-      "title": "Phong trào Kế hoạch nhỏ: Thu gom giấy vụn & vỏ lon đợt 1",
-      "description": "Mỗi học sinh thực hiện chỉ tiêu tối thiểu 3kg giấy báo/vở cũ hoặc 20 vỏ lon. Góp phần xây dựng Quỹ Đội và hỗ trợ bạn nghèo vượt khó.",
-      "type": "chien_dich",
-      "startDate": "2026-10-01",
-      "endDate": "2026-10-10",
-      "weekNumber": 4,
-      "rewardPoints": 2,
-      "bonusPoints": 3,
-      "latePenaltyPoints": 1,
-      "missPenaltyPoints": 2,
-      "createdBy": "Nguyễn Đức Minh (Lớp trưởng)",
-      "createdRole": "lop_truong",
-      "createdAt": "2026-10-01T09:00:00Z",
-      "status": "active",
-      "pointsApplied": false,
-      "participants": [
-        {
-          "studentId": "hs_01",
-          "studentName": "Nguyễn Đức Minh",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_02",
-          "studentName": "Vũ Quốc Bảo",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_03",
-          "studentName": "Hoàng Lan Anh",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_04",
-          "studentName": "Nguyễn Văn An",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_05",
-          "studentName": "Trần Quỳnh Chi",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_06",
-          "studentName": "Đặng Tuấn Dũng",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_07",
-          "studentName": "Lê Thùy Dung",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_08",
-          "studentName": "Phạm Tiến Đạt",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_09",
-          "studentName": "Vũ Thị Diễm Hương",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_10",
-          "studentName": "Bùi Đức Khang",
-          "teamId": 1,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_11",
-          "studentName": "Trần Thị Mai Phương",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_12",
-          "studentName": "Đặng Minh Quân",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_13",
-          "studentName": "Ngô Thùy Linh",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_14",
-          "studentName": "Phan Hoàng Long",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_15",
-          "studentName": "Đinh Khánh Ly",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_16",
-          "studentName": "Hoàng Nhật Minh",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_17",
-          "studentName": "Nguyễn Trà My",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_18",
-          "studentName": "Lê Duy Nam",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_19",
-          "studentName": "Tạ Bảo Ngọc",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_20",
-          "studentName": "Vũ Hữu Nghĩa",
-          "teamId": 2,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_21",
-          "studentName": "Lê Hoàng Nam",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_22",
-          "studentName": "Bùi Hải Đăng",
-          "teamId": 3,
-          "status": "da_nop",
-          "submittedAt": "2026-10-02T14:00:00Z",
-          "note": "Đạt chỉ tiêu 4.5kg giấy vụn"
-        },
-        {
-          "studentId": "hs_23",
-          "studentName": "Đỗ Ngọc Ánh",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_24",
-          "studentName": "Nguyễn Thành Phát",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_25",
-          "studentName": "Lương Thu Phương",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_26",
-          "studentName": "Trịnh Minh Quân",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_27",
-          "studentName": "Cao Như Quỳnh",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_28",
-          "studentName": "Vũ Đức Sơn",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_29",
-          "studentName": "Đào Thanh Tâm",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_30",
-          "studentName": "Hà Quang Thắng",
-          "teamId": 3,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_31",
-          "studentName": "Phạm Thu Hà",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_32",
-          "studentName": "Dương Gia Huy",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_33",
-          "studentName": "Lý Thảo My",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_34",
-          "studentName": "Tạ Minh Tuấn",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_35",
-          "studentName": "Mai Phương Uyên",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_36",
-          "studentName": "Đoàn Quang Vinh",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_37",
-          "studentName": "Phùng Hải Yến",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_38",
-          "studentName": "Nguyễn Tấn Dũng",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_39",
-          "studentName": "Hoàng Diệu Linh",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_40",
-          "studentName": "Lê Anh Khoa",
-          "teamId": 4,
-          "status": "chua_nop"
-        },
-        {
-          "studentId": "hs_41",
-          "studentName": "Trịnh Tuyết Mai",
-          "teamId": 4,
-          "status": "chua_nop"
-        }
-      ]
-    }
-  ]
+  "campaigns": [],
+  "evaluations": [],
+  "__v": 0
 }

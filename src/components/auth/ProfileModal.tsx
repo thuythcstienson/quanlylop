@@ -159,7 +159,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="VD: Cô Nguyễn Thị Thu Thủy"
+                  placeholder="VD: Thầy Nguyễn Văn Thủy"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-900"
                 />
                 {isTeacher && (
