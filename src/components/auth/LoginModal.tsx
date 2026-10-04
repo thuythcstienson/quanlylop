@@ -142,8 +142,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               👧 Thị Mai (Tổ trưởng 1)
             </button>
           </div>
-          <div className="text-[11px] text-slate-400 mt-2 text-center">
-            Mật khẩu mặc định hệ thống: <strong className="font-mono text-slate-600">123456</strong>
+          <div className="text-[11px] text-slate-500 mt-2.5 text-center bg-slate-50 py-1.5 px-2 rounded-xl border border-slate-100">
+            Tài khoản GVCN: <strong className="font-mono text-indigo-700">admin</strong> • Mật khẩu: <strong className="font-mono text-indigo-700">123456</strong> (hoặc <strong className="font-mono text-indigo-700">admin123</strong>)
           </div>
         </div>
       </div>
