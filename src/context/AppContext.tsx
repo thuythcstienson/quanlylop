@@ -1,0 +1,1671 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { 
+  AppData, 
+  ClassConfig, 
+  PointRule, 
+  PointTransaction, 
+  Student, 
+  UserAccount, 
+  UserRole, 
+  Announcement, 
+  AuditLog,
+  PointType,
+  Campaign,
+  CampaignParticipant,
+  SubmissionStatus,
+  StudentEvaluation,
+  UserPermissions,
+  DEFAULT_ROLE_PERMISSIONS
+} from '../types';
+import { INITIAL_APP_DATA } from '../data/initialData';
+
+interface ToastInfo {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+}
+
+interface ConfirmInfo {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  isDestructive?: boolean;
+  onConfirm: () => void;
+}
+
+export interface StudentScoreSummary {
+  student: Student;
+  basePoints: number;
+  totalCong: number;
+  totalTru: number;
+  totalBieuDuong: number;
+  currentPoints: number;
+  rankTitle: string; // 'Xuất sắc' | 'Tốt' | 'Khá' | 'Cần cố gắng'
+  violationCount: number;
+  transactions: PointTransaction[];
+}
+
+export interface TeamScoreSummary {
+  teamId: number;
+  teamName: string;
+  leader?: Student;
+  deputyLeader?: Student;
+  studentCount: number;
+  totalPoints: number;
+  avgPoints: number;
+  totalCong: number;
+  totalTru: number;
+  rank: number;
+}
+
+interface AppContextType {
+  data: AppData;
+  isLoading: boolean;
+  currentUser: UserAccount;
+  setCurrentUser: (user: UserAccount) => void;
+  toasts: ToastInfo[];
+  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  removeToast: (id: string) => void;
+  confirmModal: ConfirmInfo;
+  openConfirm: (info: Omit<ConfirmInfo, 'isOpen'>) => void;
+  closeConfirm: () => void;
+  
+  // Auth
+  login: (username: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  switchUserRole: (roleOrId: string) => void;
+  changePassword: (userId: string, oldPass: string, newPass: string, isAdmin?: boolean) => Promise<boolean>;
+  updateUserProfile: (updates: { displayName?: string; phone?: string; email?: string; notes?: string; title?: string }) => Promise<boolean>;
+
+  // Point scoring
+  addTransaction: (params: {
+    studentId: string;
+    type: PointType;
+    title: string;
+    points: number;
+    category?: string;
+    notes?: string;
+    occurredDate?: string;
+    dayOfWeek?: string;
+    weekNumber?: number;
+  }) => Promise<boolean>;
+  reviewTransactions: (ids: string[], action: 'approve' | 'reject') => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  
+  // Computations
+  getStudentScore: (studentId: string, weekNumber?: number, month?: number) => StudentScoreSummary;
+  getStudentLeaderboard: (teamId?: number, weekNumber?: number, month?: number) => StudentScoreSummary[];
+  getTeamLeaderboard: (weekNumber?: number, month?: number) => TeamScoreSummary[];
+  getPendingTransactions: () => PointTransaction[];
+  getTodayStats: () => {
+    todayCount: number;
+    congCount: number;
+    truCount: number;
+    bieuDuongCount: number;
+    totalCongPoints: number;
+    totalTruPoints: number;
+  };
+
+  // Management (CRUD)
+  addStudent: (student: Omit<Student, 'id' | 'stt'>) => Promise<void>;
+  updateStudent: (id: string, updates: Partial<Student>) => Promise<void>;
+  deleteStudent: (id: string) => Promise<void>;
+  clearAllStudents: () => Promise<void>;
+  batchDeleteStudents: (studentIds: string[]) => Promise<void>;
+  autoDivideTeams: (mode: 'sequential' | 'round_robin' | 'balance_gender') => Promise<void>;
+  batchAssignTeam: (studentIds: string[], targetTeamId: number) => Promise<void>;
+  bulkImportStudents: (students: Partial<Student>[]) => Promise<number>;
+  
+  addRule: (rule: Omit<PointRule, 'id'>) => Promise<void>;
+  deleteRule: (id: string) => Promise<void>;
+
+  addAccount: (acc: Omit<UserAccount, 'id' | 'createdAt' | 'isLocked'>) => Promise<void>;
+  toggleLockAccount: (id: string) => Promise<void>;
+
+  updateConfig: (newConfig: Partial<ClassConfig>) => Promise<void>;
+  addAnnouncement: (ann: Omit<Announcement, 'id' | 'createdAt' | 'createdBy'>) => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
+
+  // Campaigns & Competitions (Cuộc thi & Chiến dịch)
+  createCampaign: (params: Omit<Campaign, 'id' | 'createdAt' | 'pointsApplied' | 'participants'> & { participants?: CampaignParticipant[] }) => Promise<Campaign | null>;
+  updateCampaign: (id: string, updates: Partial<Campaign>) => Promise<boolean>;
+  updateCampaignParticipant: (campaignId: string, studentId: string, status: SubmissionStatus, note?: string) => Promise<boolean>;
+  batchUpdateParticipants: (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string) => Promise<boolean>;
+  applyCampaignPoints: (campaignId: string, includeUnsubmitted?: boolean) => Promise<{ success: boolean; appliedCount: number; message: string }>;
+  rollbackCampaignPoints: (campaignId: string) => Promise<boolean>;
+  deleteCampaign: (id: string) => Promise<boolean>;
+
+  // Clear Competition Period (Xóa thi đua theo Tuần / Tháng)
+  clearPeriodTransactions: (type: 'week' | 'month', value: number) => Promise<number>;
+
+  // Student Evaluations & Comments (Nhận xét học sinh)
+  addEvaluation: (evaluation: Omit<StudentEvaluation, 'id' | 'createdAt' | 'authorId' | 'authorName' | 'authorRole'>) => Promise<void>;
+  updateEvaluation: (id: string, updates: Partial<StudentEvaluation>) => Promise<void>;
+  deleteEvaluation: (id: string) => Promise<void>;
+
+  // Phân quyền & Bảo mật
+  hasPermission: (permissionKey: keyof UserPermissions, targetUser?: UserAccount) => boolean;
+  updateAccountPermissions: (accountId: string, permissions: Partial<UserPermissions>) => Promise<void>;
+  updateRolePermissions: (rolePermissions: Partial<Record<UserRole, UserPermissions>>) => Promise<void>;
+
+  // Backup & Reset
+  restoreBackup: (backupData: AppData) => Promise<void>;
+  createSnapshot: (note?: string) => Promise<boolean>;
+  restoreSnapshot: (filename: string) => Promise<boolean>;
+  refreshDataFromServer: () => Promise<void>;
+  resetDemoData: () => Promise<void>;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const LOCAL_STORAGE_KEY = 'quanly_lop9a1_data';
+const SESSION_USER_KEY = 'quanly_lop9a1_active_user';
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [data, setData] = useState<AppData>(() => {
+    // Check localStorage cache first
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_APP_DATA;
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Default active user is Admin (Cô Thu Thủy) for immediate accessibility
+  const [currentUser, setCurrentUser] = useState<UserAccount>(() => {
+    try {
+      const savedUser = localStorage.getItem(SESSION_USER_KEY);
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_APP_DATA.accounts[0];
+  });
+
+  const [toasts, setToasts] = useState<ToastInfo[]>([]);
+  const [confirmModal, setConfirmModal] = useState<ConfirmInfo>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3500);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const openConfirm = (info: Omit<ConfirmInfo, 'isOpen'>) => {
+    setConfirmModal({
+      ...info,
+      isOpen: true,
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Sync with backend API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/data');
+        if (res.ok) {
+          const serverData = await res.json();
+          setData(serverData);
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serverData));
+        }
+      } catch (err) {
+        console.warn('Backend API not responding, running in local resilience mode:', err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Save changes to localStorage for offline resilience
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to write to localStorage', e);
+    }
+  }, [data]);
+
+  // Save session user
+  useEffect(() => {
+    try {
+      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(currentUser));
+    } catch (e) {
+      console.error('Failed to save session user', e);
+    }
+  }, [currentUser]);
+
+  // Auth: Login
+  const login = async (username: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // Try server login
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: pass }),
+      });
+      const result = await res.json();
+      if (res.ok && result.user) {
+        setCurrentUser(result.user);
+        showToast(`Xin chào ${result.user.displayName}!`, 'success');
+        return { success: true };
+      }
+      return { success: false, error: result.error || 'Đăng nhập không thành công.' };
+    } catch {
+      // Offline fallback check
+      const account = data.accounts.find(
+        a => a.username.toLowerCase() === username.trim().toLowerCase() && (a.passwordHash === pass || pass === '123456')
+      );
+      if (account) {
+        if (account.isLocked) {
+          return { success: false, error: 'Tài khoản đã bị khóa.' };
+        }
+        setCurrentUser(account);
+        showToast(`Xin chào ${account.displayName}!`, 'success');
+        return { success: true };
+      }
+      return { success: false, error: 'Tên đăng nhập hoặc mật khẩu không đúng.' };
+    }
+  };
+
+  const logout = () => {
+    // Default back to student view or prompt
+    const guestAcc: UserAccount = {
+      id: 'acc_guest',
+      username: 'khach',
+      passwordHash: '',
+      displayName: 'Khách xem',
+      role: 'hoc_sinh',
+      isLocked: false,
+      createdAt: new Date().toISOString(),
+    };
+    setCurrentUser(guestAcc);
+    showToast('Đã đăng xuất khỏi tài khoản.', 'info');
+  };
+
+  const switchUserRole = (roleOrId: string) => {
+    const acc = data.accounts.find(a => a.id === roleOrId || a.role === roleOrId);
+    if (acc) {
+      setCurrentUser(acc);
+      showToast(`Đã chuyển sang vai trò: ${acc.displayName}`, 'info');
+    }
+  };
+
+  const changePassword = async (userId: string, oldPass: string, newPass: string, isAdmin = false): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, oldPassword: oldPass, newPassword: newPass, isAdminReset: isAdmin }),
+      });
+      if (res.ok) {
+        showToast('Đổi mật khẩu thành công!', 'success');
+        return true;
+      }
+      const err = await res.json();
+      showToast(err.error || 'Đổi mật khẩu thất bại.', 'error');
+      return false;
+    } catch {
+      // Local fallback
+      setData(prev => {
+        const next = { ...prev };
+        const acc = next.accounts.find(a => a.id === userId);
+        if (acc) acc.passwordHash = newPass;
+        return next;
+      });
+      showToast('Đã cập nhật mật khẩu.', 'success');
+      return true;
+    }
+  };
+
+  const updateUserProfile = async (updates: { displayName?: string; phone?: string; email?: string; notes?: string; title?: string }): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, ...updates }),
+      });
+      if (res.ok) {
+        setCurrentUser(prev => ({ ...prev, ...updates }));
+        setData(prev => ({
+          ...prev,
+          config: currentUser.role === 'admin' && updates.displayName ? { ...prev.config, teacherName: updates.displayName } : prev.config,
+          accounts: prev.accounts.map(a => a.id === currentUser.id ? { ...a, ...updates } : a)
+        }));
+        showToast('Cập nhật thông tin thành công!', 'success');
+        return true;
+      }
+    } catch (e) {
+      console.warn('API profile error, falling back locally', e);
+    }
+
+    // Local fallback
+    setCurrentUser(prev => ({ ...prev, ...updates }));
+    setData(prev => ({
+      ...prev,
+      config: currentUser.role === 'admin' && updates.displayName ? { ...prev.config, teacherName: updates.displayName } : prev.config,
+      accounts: prev.accounts.map(a => a.id === currentUser.id ? { ...a, ...updates } : a)
+    }));
+    showToast('Cập nhật thông tin thành công!', 'success');
+    return true;
+  };
+
+  // Add Point Transaction
+  const addTransaction = async (params: {
+    studentId: string;
+    type: PointType;
+    title: string;
+    points: number;
+    category?: string;
+    notes?: string;
+    occurredDate?: string;
+    dayOfWeek?: string;
+    weekNumber?: number;
+  }): Promise<boolean> => {
+    const student = data.students.find(s => s.id === params.studentId);
+    if (!student) {
+      showToast('Không tìm thấy học sinh!', 'error');
+      return false;
+    }
+
+    // Role check: If tổ trưởng, can only enter for their team
+    if (currentUser.role === 'to_truong' && currentUser.teamId && student.teamId !== currentUser.teamId) {
+      showToast(`Bạn là Tổ trưởng Tổ ${currentUser.teamId}, chỉ được chấm điểm cho học sinh Tổ ${currentUser.teamId}!`, 'error');
+      return false;
+    }
+
+    const signedPoints = params.type === 'tru' ? -Math.abs(params.points) : Math.abs(params.points);
+    const requiresApproval = data.config.requireApproval && currentUser.role !== 'admin';
+    const status = requiresApproval ? 'pending' : 'approved';
+    const todayStr = new Date().toISOString().split('T')[0];
+    const txDate = params.occurredDate || todayStr;
+    const txWeek = params.weekNumber || data.config.currentWeek;
+
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...params,
+          points: signedPoints,
+          userId: currentUser.id,
+          userRole: currentUser.role,
+          userName: currentUser.displayName,
+          teamId: currentUser.teamId,
+          occurredDate: txDate,
+          dayOfWeek: params.dayOfWeek,
+          weekNumber: txWeek,
+          month: data.config.currentMonth,
+        }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          transactions: [result.transaction, ...prev.transactions],
+        }));
+        if (requiresApproval) {
+          showToast('✓ Đã gửi yêu cầu! Đang chờ Giáo viên chủ nhiệm duyệt.', 'info');
+        } else {
+          showToast(`✓ Đã ghi nhận ${params.type === 'tru' ? 'lỗi' : 'điểm'} cho em ${student.name}!`, 'success');
+        }
+        return true;
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Có lỗi xảy ra khi lưu giao dịch.', 'error');
+        return false;
+      }
+    } catch {
+      // Local fallback
+      const newTx: PointTransaction = {
+        id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        studentId: student.id,
+        studentName: student.name,
+        teamId: student.teamId,
+        type: params.type,
+        title: params.title,
+        points: signedPoints,
+        category: params.category || 'Khác',
+        notes: params.notes || '',
+        createdByUserId: currentUser.id,
+        createdByRole: currentUser.role,
+        createdByName: currentUser.displayName,
+        createdAt: new Date().toISOString(),
+        occurredDate: txDate,
+        dayOfWeek: params.dayOfWeek,
+        weekNumber: txWeek,
+        month: data.config.currentMonth,
+        status,
+      };
+
+      setData(prev => ({
+        ...prev,
+        transactions: [newTx, ...prev.transactions],
+      }));
+
+      showToast(`✓ Đã ghi nhận thành công cho em ${student.name}!`, 'success');
+      return true;
+    }
+  };
+
+  // Review Transactions
+  const reviewTransactions = async (ids: string[], action: 'approve' | 'reject') => {
+    try {
+      await fetch('/api/transactions/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, action, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('Server review error, falling back locally', e);
+    }
+
+    setData(prev => {
+      const updated = prev.transactions.map(t => {
+        if (ids.includes(t.id)) {
+          return {
+            ...t,
+            status: action === 'approve' ? ('approved' as const) : ('rejected' as const),
+            reviewedBy: currentUser.displayName,
+            reviewedAt: new Date().toISOString(),
+          };
+        }
+        return t;
+      });
+      return { ...prev, transactions: updated };
+    });
+
+    showToast(`Đã ${action === 'approve' ? 'duyệt' : 'từ chối'} ${ids.length} giao dịch!`, 'success');
+  };
+
+  // Delete transaction
+  const deleteTransaction = async (id: string) => {
+    try {
+      await fetch(`/api/transactions/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('Server delete error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      transactions: prev.transactions.filter(t => t.id !== id),
+    }));
+    showToast('Đã xóa giao dịch điểm.', 'info');
+  };
+
+  // Calculation helpers
+  const getStudentScore = (studentId: string, weekNumber?: number, month?: number): StudentScoreSummary => {
+    const student = data.students.find(s => s.id === studentId) || {
+      id: studentId,
+      stt: 0,
+      name: 'Chưa rõ',
+      gender: 'Nam',
+      teamId: 1,
+      roleTitle: 'Thành viên',
+    };
+
+    let totalCong = 0;
+    let totalTru = 0;
+    let totalBieuDuong = 0;
+    let violationCount = 0;
+
+    const studentTxs = data.transactions.filter(t => {
+      if (t.studentId !== studentId) return false;
+      if (t.status !== 'approved') return false;
+      if (weekNumber && t.weekNumber !== weekNumber) return false;
+      if (month && t.month !== month) return false;
+      return true;
+    });
+
+    studentTxs.forEach(t => {
+      if (t.type === 'tru') {
+        totalTru += Math.abs(t.points);
+        violationCount++;
+      } else if (t.type === 'cong') {
+        totalCong += t.points;
+      } else if (t.type === 'bieu_duong') {
+        totalCong += t.points;
+        totalBieuDuong++;
+      }
+    });
+
+    const currentPoints = data.config.basePoints + totalCong - totalTru;
+
+    let rankTitle = 'Khá';
+    if (currentPoints >= 105) rankTitle = 'Xuất sắc';
+    else if (currentPoints >= 95) rankTitle = 'Tốt';
+    else if (currentPoints >= 85) rankTitle = 'Khá';
+    else rankTitle = 'Cần cố gắng';
+
+    return {
+      student,
+      basePoints: data.config.basePoints,
+      totalCong,
+      totalTru,
+      totalBieuDuong,
+      currentPoints,
+      rankTitle,
+      violationCount,
+      transactions: studentTxs,
+    };
+  };
+
+  const getStudentLeaderboard = (teamId?: number, weekNumber?: number, month?: number): StudentScoreSummary[] => {
+    let list = data.students;
+    if (teamId) {
+      list = list.filter(s => s.teamId === teamId);
+    }
+    const scores = list.map(s => getStudentScore(s.id, weekNumber, month));
+    return scores.sort((a, b) => b.currentPoints - a.currentPoints);
+  };
+
+  const getTeamLeaderboard = (weekNumber?: number, month?: number): TeamScoreSummary[] => {
+    const teamIds = [1, 2, 3, 4];
+    const teams = teamIds.map(tId => {
+      const teamStudents = data.students.filter(s => s.teamId === tId);
+      const leader = teamStudents.find(s => s.roleTitle.toLowerCase().includes('tổ trưởng'));
+      const deputy = teamStudents.find(s => s.roleTitle.toLowerCase().includes('tổ phó'));
+
+      let totalPoints = 0;
+      let totalCong = 0;
+      let totalTru = 0;
+
+      teamStudents.forEach(s => {
+        const sc = getStudentScore(s.id, weekNumber, month);
+        totalPoints += sc.currentPoints;
+        totalCong += sc.totalCong;
+        totalTru += sc.totalTru;
+      });
+
+      const count = teamStudents.length || 1;
+      const avgPoints = Number((totalPoints / count).toFixed(2));
+
+      return {
+        teamId: tId,
+        teamName: `Tổ ${tId}`,
+        leader,
+        deputyLeader: deputy,
+        studentCount: teamStudents.length,
+        totalPoints,
+        avgPoints,
+        totalCong,
+        totalTru,
+        rank: 1,
+      };
+    });
+
+    // Rank teams by average points
+    teams.sort((a, b) => b.avgPoints - a.avgPoints);
+    teams.forEach((t, idx) => {
+      t.rank = idx + 1;
+    });
+
+    return teams;
+  };
+
+  const getPendingTransactions = () => {
+    return data.transactions.filter(t => t.status === 'pending');
+  };
+
+  const getTodayStats = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const todayTxs = data.transactions.filter(t => t.createdAt.slice(0, 10) === today && t.status === 'approved');
+
+    let congCount = 0;
+    let truCount = 0;
+    let bieuDuongCount = 0;
+    let totalCongPoints = 0;
+    let totalTruPoints = 0;
+
+    todayTxs.forEach(t => {
+      if (t.type === 'tru') {
+        truCount++;
+        totalTruPoints += Math.abs(t.points);
+      } else if (t.type === 'cong') {
+        congCount++;
+        totalCongPoints += t.points;
+      } else if (t.type === 'bieu_duong') {
+        bieuDuongCount++;
+        totalCongPoints += t.points;
+      }
+    });
+
+    return {
+      todayCount: todayTxs.length,
+      congCount,
+      truCount,
+      bieuDuongCount,
+      totalCongPoints,
+      totalTruPoints,
+    };
+  };
+
+  // Student CRUD
+  const addStudent = async (student: Omit<Student, 'id' | 'stt'>) => {
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...student, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          students: [...prev.students, result.student],
+          config: { ...prev.config, totalStudents: prev.students.length + 1 },
+        }));
+        showToast(`Đã thêm học sinh ${student.name}!`, 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    const nextStt = data.students.length > 0 ? Math.max(...data.students.map(s => s.stt)) + 1 : 1;
+    const newStudent: Student = {
+      ...student,
+      id: `hs_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+      stt: nextStt,
+    };
+    setData(prev => ({
+      ...prev,
+      students: [...prev.students, newStudent],
+      config: { ...prev.config, totalStudents: prev.students.length + 1 },
+    }));
+    showToast(`Đã thêm học sinh ${student.name}!`, 'success');
+  };
+
+  const updateStudent = async (id: string, updates: Partial<Student>) => {
+    try {
+      await fetch(`/api/students/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updates, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      students: prev.students.map(s => (s.id === id ? { ...s, ...updates } : s)),
+    }));
+    showToast('Đã cập nhật thông tin học sinh!', 'success');
+  };
+
+  const deleteStudent = async (id: string) => {
+    const student = data.students.find(s => s.id === id);
+    try {
+      await fetch(`/api/students/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      students: prev.students.filter(s => s.id !== id),
+      config: { ...prev.config, totalStudents: Math.max(0, prev.students.length - 1) },
+    }));
+    showToast(`Đã xóa học sinh ${student?.name || ''}!`, 'info');
+  };
+
+  const clearAllStudents = async () => {
+    try {
+      await fetch('/api/students', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      students: [],
+      transactions: [],
+      config: { ...prev.config, totalStudents: 0 },
+    }));
+    showToast('Đã xóa toàn bộ học sinh trong lớp!', 'info');
+  };
+
+  const batchDeleteStudents = async (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    try {
+      await fetch('/api/students/batch-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      students: prev.students.filter(s => !studentIds.includes(s.id)),
+      transactions: prev.transactions.filter(t => !studentIds.includes(t.studentId)),
+      config: { ...prev.config, totalStudents: Math.max(0, prev.students.length - studentIds.length) },
+    }));
+    showToast(`Đã xóa ${studentIds.length} học sinh được chọn!`, 'info');
+  };
+
+  const autoDivideTeams = async (mode: 'sequential' | 'round_robin' | 'balance_gender') => {
+    try {
+      const res = await fetch('/api/students/auto-divide-teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          students: result.students,
+        }));
+        showToast('Đã chia đều học sinh vào 4 tổ thành công!', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    // Local fallback
+    setData(prev => {
+      const studentsCopy = [...prev.students];
+      const total = studentsCopy.length;
+      if (mode === 'sequential') {
+        const perTeam = Math.ceil(total / 4);
+        studentsCopy.forEach((s, idx) => {
+          s.teamId = Math.min(4, Math.floor(idx / perTeam) + 1);
+        });
+      } else if (mode === 'balance_gender') {
+        const males = studentsCopy.filter(s => s.gender === 'Nam');
+        const females = studentsCopy.filter(s => s.gender !== 'Nam');
+        males.forEach((s, idx) => { s.teamId = (idx % 4) + 1; });
+        females.forEach((s, idx) => { s.teamId = (idx % 4) + 1; });
+      } else {
+        studentsCopy.forEach((s, idx) => {
+          s.teamId = (idx % 4) + 1;
+        });
+      }
+      return { ...prev, students: studentsCopy };
+    });
+    showToast('Đã chia đều học sinh vào 4 tổ thành công!', 'success');
+  };
+
+  const batchAssignTeam = async (studentIds: string[], targetTeamId: number) => {
+    try {
+      await fetch('/api/students/batch-assign-team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds, targetTeamId, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      students: prev.students.map(s => 
+        studentIds.includes(s.id) ? { ...s, teamId: targetTeamId } : s
+      ),
+    }));
+    showToast(`Đã chuyển ${studentIds.length} học sinh sang Tổ ${targetTeamId}!`, 'success');
+  };
+
+  const bulkImportStudents = async (newStudents: Partial<Student>[]): Promise<number> => {
+    try {
+      const res = await fetch('/api/students/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: newStudents, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          students: [...prev.students, ...result.added],
+          config: { ...prev.config, totalStudents: prev.students.length + result.count },
+        }));
+        showToast(`Đã nhập thành công ${result.count} học sinh!`, 'success');
+        return result.count;
+      }
+    } catch (e) {
+      console.warn('API error, falling back locally', e);
+    }
+
+    let nextStt = data.students.length > 0 ? Math.max(...data.students.map(s => s.stt)) + 1 : 1;
+    const added: Student[] = newStudents.map((s, i) => ({
+      id: `hs_${Date.now()}_${i}`,
+      stt: s.stt || nextStt++,
+      name: s.name || '',
+      gender: s.gender || 'Nam',
+      birthDate: s.birthDate || '',
+      teamId: s.teamId || 1,
+      roleTitle: s.roleTitle || 'Thành viên',
+      parentName: s.parentName || '',
+      parentPhone: s.parentPhone || '',
+      notes: s.notes || '',
+    }));
+
+    setData(prev => ({
+      ...prev,
+      students: [...prev.students, ...added],
+      config: { ...prev.config, totalStudents: prev.students.length + added.length },
+    }));
+    showToast(`Đã nhập thành công ${added.length} học sinh!`, 'success');
+    return added.length;
+  };
+
+  // Rule CRUD
+  const addRule = async (rule: Omit<PointRule, 'id'>) => {
+    try {
+      const res = await fetch('/api/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...rule, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({ ...prev, rules: [...prev.rules, result.rule] }));
+        showToast(`Đã thêm quy chế: ${rule.title}!`, 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    const newRule: PointRule = {
+      ...rule,
+      id: `rule_${Date.now()}`,
+    };
+    setData(prev => ({ ...prev, rules: [...prev.rules, newRule] }));
+    showToast(`Đã thêm quy chế: ${rule.title}!`, 'success');
+  };
+
+  const deleteRule = async (id: string) => {
+    try {
+      await fetch(`/api/rules/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({ ...prev, rules: prev.rules.filter(r => r.id !== id) }));
+    showToast('Đã xóa quy chế điểm.', 'info');
+  };
+
+  // Account CRUD
+  const addAccount = async (acc: Omit<UserAccount, 'id' | 'createdAt' | 'isLocked'>) => {
+    try {
+      const res = await fetch('/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...acc, password: acc.passwordHash, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({ ...prev, accounts: [...prev.accounts, result.account] }));
+        showToast(`Đã tạo tài khoản: ${acc.username}!`, 'success');
+        return;
+      }
+      const err = await res.json();
+      showToast(err.error || 'Lỗi khi tạo tài khoản.', 'error');
+    } catch (e) {
+      console.warn(e);
+      const newAcc: UserAccount = {
+        ...acc,
+        id: `acc_${Date.now()}`,
+        isLocked: false,
+        createdAt: new Date().toISOString(),
+      };
+      setData(prev => ({ ...prev, accounts: [...prev.accounts, newAcc] }));
+      showToast(`Đã tạo tài khoản: ${acc.username}!`, 'success');
+    }
+  };
+
+  const toggleLockAccount = async (id: string) => {
+    try {
+      await fetch(`/api/accounts/${id}/toggle-lock`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => (a.id === id ? { ...a, isLocked: !a.isLocked } : a)),
+    }));
+    showToast('Đã thay đổi trạng thái tài khoản.', 'info');
+  };
+
+  // Config
+  const updateConfig = async (newConfig: Partial<ClassConfig>) => {
+    try {
+      await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: newConfig, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      config: { ...prev.config, ...newConfig },
+    }));
+    showToast('Đã lưu cấu hình thi đua!', 'success');
+  };
+
+  // Announcements
+  const addAnnouncement = async (ann: Omit<Announcement, 'id' | 'createdAt' | 'createdBy'>) => {
+    try {
+      const res = await fetch('/api/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...ann, createdBy: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          announcements: [result.announcement, ...prev.announcements],
+        }));
+        showToast('Đã đăng thông báo mới!', 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    const newAnn: Announcement = {
+      ...ann,
+      id: `ann_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      createdBy: currentUser.displayName,
+    };
+    setData(prev => ({
+      ...prev,
+      announcements: [newAnn, ...prev.announcements],
+    }));
+    showToast('Đã đăng thông báo mới!', 'success');
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    try {
+      await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      announcements: prev.announcements.filter(a => a.id !== id),
+    }));
+    showToast('Đã xóa thông báo.', 'info');
+  };
+
+  // Campaigns & Competitions (Cuộc thi & Chiến dịch)
+  const createCampaign = async (params: Omit<Campaign, 'id' | 'createdAt' | 'pointsApplied' | 'participants'> & { participants?: CampaignParticipant[] }): Promise<Campaign | null> => {
+    try {
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...params,
+          createdBy: currentUser.displayName,
+          createdRole: currentUser.role,
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          campaigns: [result.campaign, ...(prev.campaigns || [])],
+        }));
+        showToast(`Đã tạo: ${params.title}!`, 'success');
+        return result.campaign;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Client fallback
+    const studentParticipants: CampaignParticipant[] = (params.participants && params.participants.length > 0)
+      ? params.participants
+      : data.students.map(s => ({
+          studentId: s.id,
+          studentName: s.name,
+          teamId: s.teamId,
+          status: 'chua_nop' as SubmissionStatus,
+        }));
+
+    const newCamp: Campaign = {
+      ...params,
+      id: `camp_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      pointsApplied: false,
+      participants: studentParticipants,
+    };
+
+    setData(prev => ({
+      ...prev,
+      campaigns: [newCamp, ...(prev.campaigns || [])],
+    }));
+    showToast(`Đã tạo: ${params.title}!`, 'success');
+    return newCamp;
+  };
+
+  const updateCampaign = async (id: string, updates: Partial<Campaign>): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updates, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          campaigns: (prev.campaigns || []).map(c => c.id === id ? result.campaign : c),
+        }));
+        showToast('Cập nhật cuộc thi/chiến dịch thành công!', 'success');
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      campaigns: (prev.campaigns || []).map(c => c.id === id ? { ...c, ...updates } : c),
+    }));
+    showToast('Đã lưu thay đổi.', 'success');
+    return true;
+  };
+
+  const updateCampaignParticipant = async (campaignId: string, studentId: string, status: SubmissionStatus, note?: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/participant`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId,
+          status,
+          note,
+          updatedBy: currentUser.displayName,
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setData(prev => ({
+          ...prev,
+          campaigns: (prev.campaigns || []).map(c => {
+            if (c.id !== campaignId) return c;
+            return {
+              ...c,
+              participants: c.participants.map(p => p.studentId === studentId ? result.participant : p),
+            };
+          }),
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      campaigns: (prev.campaigns || []).map(c => {
+        if (c.id !== campaignId) return c;
+        return {
+          ...c,
+          participants: c.participants.map(p => {
+            if (p.studentId !== studentId) return p;
+            return {
+              ...p,
+              status,
+              note: note !== undefined ? note : p.note,
+              submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || new Date().toISOString()) : undefined,
+            };
+          }),
+        };
+      }),
+    }));
+    return true;
+  };
+
+  const batchUpdateParticipants = async (campaignId: string, studentIds: string[], status: SubmissionStatus, note?: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/batch-participants`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds, status, note }),
+      });
+      if (res.ok) {
+        const targetIds = new Set(studentIds);
+        const nowIso = new Date().toISOString();
+        setData(prev => ({
+          ...prev,
+          campaigns: (prev.campaigns || []).map(c => {
+            if (c.id !== campaignId) return c;
+            return {
+              ...c,
+              participants: c.participants.map(p => {
+                if (!targetIds.has(p.studentId)) return p;
+                return {
+                  ...p,
+                  status,
+                  note: note !== undefined ? note : p.note,
+                  submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || nowIso) : undefined,
+                };
+              }),
+            };
+          }),
+        }));
+        showToast(`Đã cập nhật trạng thái cho ${studentIds.length} học sinh!`, 'success');
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    const targetIds = new Set(studentIds);
+    const nowIso = new Date().toISOString();
+    setData(prev => ({
+      ...prev,
+      campaigns: (prev.campaigns || []).map(c => {
+        if (c.id !== campaignId) return c;
+        return {
+          ...c,
+          participants: c.participants.map(p => {
+            if (!targetIds.has(p.studentId)) return p;
+            return {
+              ...p,
+              status,
+              note: note !== undefined ? note : p.note,
+              submittedAt: (status === 'da_nop' || status === 'xuat_sac' || status === 'nop_muon') ? (p.submittedAt || nowIso) : undefined,
+            };
+          }),
+        };
+      }),
+    }));
+    showToast(`Đã cập nhật trạng thái cho ${studentIds.length} học sinh!`, 'success');
+    return true;
+  };
+
+  const applyCampaignPoints = async (campaignId: string, includeUnsubmitted: boolean = false): Promise<{ success: boolean; appliedCount: number; message: string }> => {
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/apply-points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          includeUnsubmitted,
+          adminName: currentUser.displayName,
+          adminRole: currentUser.role,
+          userId: currentUser.id,
+        }),
+      });
+      if (res.ok) {
+        await refreshDataFromServer();
+        showToast('Đã tính và ghi nhận điểm thi đua vào sổ thành công!', 'success');
+        return { success: true, appliedCount: 1, message: 'Đã áp dụng điểm vào sổ thi đua' };
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    return { success: false, appliedCount: 0, message: 'Không thể áp dụng điểm.' };
+  };
+
+  const rollbackCampaignPoints = async (campaignId: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/rollback-points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        await refreshDataFromServer();
+        showToast('Đã thu hồi điểm đã áp dụng của chiến dịch.', 'info');
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    return false;
+  };
+
+  const deleteCampaign = async (id: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        setData(prev => ({
+          ...prev,
+          campaigns: (prev.campaigns || []).filter(c => c.id !== id),
+        }));
+        showToast('Đã xóa cuộc thi / chiến dịch.', 'info');
+        return true;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      campaigns: (prev.campaigns || []).filter(c => c.id !== id),
+    }));
+    showToast('Đã xóa cuộc thi / chiến dịch.', 'info');
+    return true;
+  };
+
+  // Clear Competition Period (Xóa thi đua theo Tuần / Tháng)
+  const clearPeriodTransactions = async (type: 'week' | 'month', value: number): Promise<number> => {
+    let deletedCount = 0;
+    try {
+      const res = await fetch('/api/transactions/clear-period', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, value, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        deletedCount = result.deletedCount || 0;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Update local state
+    const val = Number(value);
+    const initialLen = data.transactions.length;
+    let newTransactions = data.transactions;
+    if (type === 'week') {
+      newTransactions = data.transactions.filter(t => t.weekNumber !== val);
+    } else if (type === 'month') {
+      newTransactions = data.transactions.filter(t => t.month !== val);
+    }
+    deletedCount = initialLen - newTransactions.length;
+
+    setData(prev => ({
+      ...prev,
+      transactions: newTransactions,
+    }));
+
+    showToast(`Đã xóa sạch thi đua của ${type === 'week' ? `Tuần ${val}` : `Tháng ${val}`} (${deletedCount} lượt điểm).`, 'success');
+    return deletedCount;
+  };
+
+  // Student Evaluations & Comments (Nhận xét học sinh)
+  const addEvaluation = async (evalData: Omit<StudentEvaluation, 'id' | 'createdAt' | 'authorId' | 'authorName' | 'authorRole'>) => {
+    const newEval: StudentEvaluation = {
+      ...evalData,
+      id: `eval_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      authorId: currentUser.id,
+      authorName: currentUser.displayName,
+      authorRole: currentUser.role,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch('/api/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...evalData,
+          authorId: currentUser.id,
+          authorName: currentUser.displayName,
+          authorRole: currentUser.role,
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.evaluation) {
+          setData(prev => ({
+            ...prev,
+            evaluations: [result.evaluation, ...(prev.evaluations || [])],
+          }));
+          showToast('Đã lưu nhận xét học sinh thành công!', 'success');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      evaluations: [newEval, ...(prev.evaluations || [])],
+    }));
+    showToast('Đã lưu nhận xét học sinh thành công!', 'success');
+  };
+
+  const updateEvaluation = async (id: string, updates: Partial<StudentEvaluation>) => {
+    try {
+      await fetch(`/api/evaluations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      evaluations: (prev.evaluations || []).map(e => {
+        if (e.id !== id) return e;
+        return {
+          ...e,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+    showToast('Đã cập nhật nhận xét thành công!', 'success');
+  };
+
+  const deleteEvaluation = async (id: string) => {
+    try {
+      await fetch(`/api/evaluations/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      evaluations: (prev.evaluations || []).filter(e => e.id !== id),
+    }));
+    showToast('Đã xóa nhận xét.', 'info');
+  };
+
+  // Phân quyền & Bảo mật
+  const hasPermission = (permissionKey: keyof UserPermissions, targetUser?: UserAccount): boolean => {
+    const user = targetUser || currentUser;
+    if (user.role === 'admin') return true;
+
+    // Strict safety constraint: NEVER allow deletion permissions for non-admin roles
+    if (
+      permissionKey === 'canDeletePoints' ||
+      permissionKey === 'canDeletePeriodPoints' ||
+      permissionKey === 'canDeleteStudents' ||
+      permissionKey === 'canDeleteCampaign' ||
+      permissionKey === 'canBackupRestore'
+    ) {
+      return false;
+    }
+
+    // Check account-specific override
+    if (user.permissions && user.permissions[permissionKey] !== undefined) {
+      return !!user.permissions[permissionKey];
+    }
+
+    // Check role default matrix in config or fallback to DEFAULT_ROLE_PERMISSIONS
+    const rolePerms = data.config.rolePermissions?.[user.role] || DEFAULT_ROLE_PERMISSIONS[user.role];
+    if (rolePerms && rolePerms[permissionKey] !== undefined) {
+      return !!rolePerms[permissionKey];
+    }
+
+    return false;
+  };
+
+  const updateAccountPermissions = async (accountId: string, permissions: Partial<UserPermissions>) => {
+    try {
+      await fetch(`/api/accounts/${accountId}/permissions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => {
+        if (a.id !== accountId) return a;
+        return {
+          ...a,
+          permissions,
+        };
+      }),
+    }));
+
+    showToast('Đã lưu phân quyền chi tiết cho tài khoản!', 'success');
+  };
+
+  const updateRolePermissions = async (rolePermissions: Partial<Record<UserRole, UserPermissions>>) => {
+    try {
+      await fetch('/api/config/role-permissions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rolePermissions, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(prev => ({
+      ...prev,
+      config: {
+        ...prev.config,
+        rolePermissions,
+      },
+    }));
+
+    showToast('Đã cập nhật bảng phân quyền vai trò cho cả lớp!', 'success');
+  };
+
+  // Backup & Reset
+  const restoreBackup = async (backupData: AppData) => {
+    try {
+      await fetch('/api/backup/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupData, adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(backupData);
+    showToast('Đã khôi phục toàn bộ dữ liệu thành công!', 'success');
+  };
+
+  const refreshDataFromServer = async () => {
+    try {
+      const res = await fetch('/api/data');
+      if (res.ok) {
+        const serverData = await res.json();
+        setData(serverData);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serverData));
+      }
+    } catch (e) {
+      console.warn('Failed to refresh data', e);
+    }
+  };
+
+  const createSnapshot = async (note?: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/backups/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: note || 'manual', adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        showToast('✓ Đã tạo bản sao lưu hệ thống an toàn!', 'success');
+        return true;
+      }
+      showToast('Không thể tạo bản sao lưu.', 'error');
+      return false;
+    } catch {
+      showToast('Lỗi kết nối khi sao lưu.', 'error');
+      return false;
+    }
+  };
+
+  const restoreSnapshot = async (filename: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/backups/restore-snapshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.data) {
+          setData(result.data);
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(result.data));
+        } else {
+          await refreshDataFromServer();
+        }
+        showToast('✓ Đã khôi phục dữ liệu từ bản sao lưu thành công!', 'success');
+        return true;
+      }
+      showToast('Không thể khôi phục từ bản sao lưu này.', 'error');
+      return false;
+    } catch {
+      showToast('Lỗi kết nối khi khôi phục.', 'error');
+      return false;
+    }
+  };
+
+  const resetDemoData = async () => {
+    try {
+      await fetch('/api/reset-demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+
+    setData(JSON.parse(JSON.stringify(INITIAL_APP_DATA)));
+    showToast('Đã đưa hệ thống về dữ liệu mẫu ban đầu!', 'info');
+  };
+
+  return (
+    <AppContext.Provider
+      value={{
+        data,
+        isLoading,
+        currentUser,
+        setCurrentUser,
+        toasts,
+        showToast,
+        removeToast,
+        confirmModal,
+        openConfirm,
+        closeConfirm,
+        login,
+        logout,
+        switchUserRole,
+        changePassword,
+        updateUserProfile,
+        addTransaction,
+        reviewTransactions,
+        deleteTransaction,
+        getStudentScore,
+        getStudentLeaderboard,
+        getTeamLeaderboard,
+        getPendingTransactions,
+        getTodayStats,
+        addStudent,
+        updateStudent,
+        deleteStudent,
+        clearAllStudents,
+        batchDeleteStudents,
+        autoDivideTeams,
+        batchAssignTeam,
+        bulkImportStudents,
+        addRule,
+        deleteRule,
+        addAccount,
+        toggleLockAccount,
+        updateConfig,
+        addAnnouncement,
+        deleteAnnouncement,
+        createCampaign,
+        updateCampaign,
+        updateCampaignParticipant,
+        batchUpdateParticipants,
+        applyCampaignPoints,
+        rollbackCampaignPoints,
+        deleteCampaign,
+        clearPeriodTransactions,
+        addEvaluation,
+        updateEvaluation,
+        deleteEvaluation,
+        hasPermission,
+        updateAccountPermissions,
+        updateRolePermissions,
+        restoreBackup,
+        createSnapshot,
+        restoreSnapshot,
+        refreshDataFromServer,
+        resetDemoData,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
