@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { LogIn, KeyRound, X, Shield, User, Lock, Check } from 'lucide-react';
+import { LogIn, KeyRound, X, Shield, User, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,10 +8,11 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { login, data } = useApp();
+  const { login } = useApp();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -61,9 +62,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Tên đăng nhập
             </label>
             <div className="relative">
@@ -71,81 +72,49 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 required
-                placeholder="VD: admin, loptruong, totruong1..."
+                autoComplete="username"
+                placeholder="Nhập tên đăng nhập"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Mật khẩu
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
-                placeholder="••••••"
+                autoComplete="current-password"
+                placeholder="Nhập mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                className="w-full pl-9 pr-10 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white rounded-xl font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 mt-4"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white rounded-xl font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 mt-5"
           >
             {isLoading ? 'Đang xử lý...' : 'ĐĂNG NHẬP'}
           </button>
         </form>
-
-        {/* Quick select demo accounts for testing */}
-        <div className="mt-4 pt-3 border-t border-slate-100">
-          <div className="text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">
-            Chọn nhanh tài khoản để đăng nhập:
-          </div>
-          <div className="flex flex-wrap gap-1.5 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('admin');
-                setPassword('123456');
-              }}
-              className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg font-bold border border-purple-200 cursor-pointer transition-colors"
-            >
-              👩‍🏫 Cô Thu Thủy (GVCN)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('loptruong');
-                setPassword('123456');
-              }}
-              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg font-bold border border-blue-200 cursor-pointer transition-colors"
-            >
-              👦 Đức Minh (Lớp trưởng)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('totruong1');
-                setPassword('123456');
-              }}
-              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold border border-emerald-200 cursor-pointer transition-colors"
-            >
-              👧 Thị Mai (Tổ trưởng 1)
-            </button>
-          </div>
-          <div className="text-[11px] text-slate-500 mt-2.5 text-center bg-slate-50 py-1.5 px-2 rounded-xl border border-slate-100">
-            Tài khoản GVCN: <strong className="font-mono text-indigo-700">admin</strong> • Mật khẩu: <strong className="font-mono text-indigo-700">123456</strong> (hoặc <strong className="font-mono text-indigo-700">admin123</strong>)
-          </div>
-        </div>
       </div>
     </div>
   );
