@@ -29,7 +29,7 @@ import { AccessDeniedView } from '../common/AccessDeniedView';
 export const AccountsView: React.FC = () => {
   const { data, currentUser, addAccount, toggleLockAccount, changePassword, openConfirm, showToast, hasPermission } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'accounts' | 'audit_log'>('accounts');
+  const [activeTab, setActiveTab] = useState<'accounts' | 'audit_log' | 'access_logs'>('accounts');
 
   // Modal profile & pass change for current user
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -244,6 +244,35 @@ export const AccountsView: React.FC = () => {
       </div>
 
       {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('accounts')}
+          className={`pb-2.5 px-4 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'accounts' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'
+          }`}
+        >
+          <UserCheck className="w-4 h-4 inline-block mr-2" />
+          Danh Sách Tài Khoản
+        </button>
+        <button
+          onClick={() => setActiveTab('audit_log')}
+          className={`pb-2.5 px-4 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'audit_log' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500'
+          }`}
+        >
+          <History className="w-4 h-4 inline-block mr-2" />
+          Lịch Sử Thao Tác
+        </button>
+        <button
+          onClick={() => setActiveTab('access_logs')}
+          className={`pb-2.5 px-4 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'access_logs' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500'
+          }`}
+        >
+          <Sliders className="w-4 h-4 inline-block mr-2" />
+          Lịch Sử Truy Cập
+        </button>
+      </div>
       <div className="flex items-center gap-2 border-b border-slate-200">
         <button
           onClick={() => setActiveTab('accounts')}
@@ -432,7 +461,53 @@ export const AccountsView: React.FC = () => {
           </div>
         </div>
       )}
-
+{/* TAB 3: ACCESS LOGS (LỊCH SỬ TRUY CẬP) */}
+      {activeTab === 'access_logs' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <span className="text-xs text-slate-600 font-bold">Thống kê phiên đăng nhập</span>
+          </div>
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 text-slate-600 font-bold z-10">
+                <tr>
+                  <th className="py-3 px-3">Người dùng</th>
+                  <th className="py-3 px-3 text-center">Vai trò</th>
+                  <th className="py-3 px-3">Thời điểm ĐN</th>
+                  <th className="py-3 px-3">Thời lượng</th>
+                  <th className="py-3 px-3">Thiết bị</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {(data.accessLogs || []).map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3">
+                      <div className="font-bold text-slate-900">{log.displayName}</div>
+                      <div className="text-[10px] text-slate-400">@{log.username}</div>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold text-[10px]">
+                        {log.role}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-slate-600">
+                      {formatDateVN(log.loginTime)} {new Date(log.loginTime).toLocaleTimeString('vi-VN')}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      {log.durationSeconds > 60 
+                        ? `${Math.floor(log.durationSeconds / 60)} phút` 
+                        : `${log.durationSeconds} giây`}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-500 truncate max-w-[120px]">
+                      {log.device}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       {/* CREATE ACCOUNT MODAL */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
