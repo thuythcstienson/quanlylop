@@ -1,0 +1,6 @@
+{
+  "name": "Quản Lý Lớp 9A1 – THCS Vân Hà 2",
+  "description": "Hệ thống quản lý lớp chủ nhiệm, thi đua nề nếp, cộng trừ điểm, biểu dương và phân quyền cán sự lớp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

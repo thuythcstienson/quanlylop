@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        try {
+          var _rawFetch = window.fetch;
+          var activeFetch = _rawFetch;
+
+          // First define on Window.prototype so that assignment on window traverses prototype setter
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            try {
+              Object.defineProperty(Window.prototype, 'fetch', {
+                get: function() {
+                  return activeFetch;
+                },
+                set: function(newFetch) {
+                  activeFetch = newFetch;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e1) {}
+          }
+
+          // Also define on window instance if configurable
+          try {
+            Object.defineProperty(window, 'fetch', {
+              get: function() {
+                return activeFetch;
+              },
+              set: function(newFetch) {
+                activeFetch = newFetch;
+              },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e2) {}
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Lớp 9A1 – THCS Vân Hà 2</title>
+    <meta name="description" content="Hệ thống quản lý lớp chủ nhiệm, thi đua nề nếp, cộng trừ điểm, biểu dương và phân quyền cán sự lớp." />
+    <meta property="og:title" content="Quản Lý Lớp 9A1 – THCS Vân Hà 2" />
+    <meta property="og:description" content="Hệ thống quản lý lớp chủ nhiệm, thi đua nề nếp, cộng trừ điểm, biểu dương và phân quyền cán sự lớp." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
