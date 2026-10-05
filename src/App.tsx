@@ -151,6 +151,18 @@ const MainLayout: React.FC = () => {
           )
         )}
 
+        {currentView === 'access-logs' && (
+          currentUser.role !== 'admin' ? (
+            <AccessDeniedView 
+              target="Lịch Sử Truy Cập & Thời Lượng Thành Viên (Chỉ dành cho GVCN)" 
+              onNavigateHome={() => navigateTo('dashboard')}
+              onOpenLogin={() => setIsLoginOpen(true)}
+            />
+          ) : (
+            <AccountsView initialTab="access_history" />
+          )
+        )}
+
         {currentView === 'settings' && (
           (currentUser.role !== 'admin' && !hasPermission('canManageRules')) ? (
             <AccessDeniedView 
@@ -269,6 +281,16 @@ const MainLayout: React.FC = () => {
                 >
                   <Bell className="w-4 h-4 text-orange-600" />
                   <span>Thông báo & Zalo</span>
+                </button>
+              )}
+
+              {currentUser.role === 'admin' && (
+                <button
+                  onClick={() => navigateTo('access-logs')}
+                  className="p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 rounded-xl font-bold flex items-center gap-2 cursor-pointer border border-indigo-200"
+                >
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  <span>Lịch sử truy cập</span>
                 </button>
               )}
 

@@ -16,7 +16,8 @@ import {
   Trophy,
   MessageSquare,
   LogIn,
-  Settings
+  Settings,
+  Clock
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -369,6 +370,19 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <Database className="w-4 h-4 text-emerald-600" />
                         <span>Sao lưu & Khôi phục dữ liệu</span>
+                      </button>
+                    )}
+
+                    {currentUser.role === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setShowRoleMenu(false);
+                          onNavigate('access-logs');
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-indigo-800 hover:bg-indigo-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+                      >
+                        <Clock className="w-4 h-4 text-indigo-600" />
+                        <span>Lịch sử truy cập thành viên</span>
                       </button>
                     )}
 

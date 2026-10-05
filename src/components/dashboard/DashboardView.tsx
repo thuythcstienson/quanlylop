@@ -22,7 +22,8 @@ import {
   Edit3,
   X,
   Medal,
-  Flag
+  Flag,
+  ChevronRight
 } from 'lucide-react';
 import { exportMultiSheetExcel, exportToWordDoc } from '../../utils/exportUtils';
 
@@ -51,8 +52,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const allStudentScores = getStudentLeaderboard();
   const pendingTransactions = getPendingTransactions();
 
-  // Top 5 commended students
-  const topStars = allStudentScores.slice(0, 5);
+  // Top 5 commended students with tie-awareness (đồng hạng khi bằng điểm nhau)
+  const topScoreVal = allStudentScores[0]?.currentPoints;
+  const topTiedCount = allStudentScores.filter(s => s.currentPoints === topScoreVal).length;
+
+  const rankedTopStars = React.useMemo(() => {
+    let curRank = 1;
+    return allStudentScores.slice(0, 10).map((item, idx, arr) => {
+      if (idx > 0 && item.currentPoints < arr[idx - 1].currentPoints) {
+        curRank = idx + 1;
+      }
+      return {
+        ...item,
+        rank: curRank,
+        isTied: allStudentScores.filter(o => o.currentPoints === item.currentPoints).length > 1,
+      };
+    }).slice(0, 5);
+  }, [allStudentScores]);
 
   // Top 5 needing reminder (lowest points or most violations)
   const needingReminder = [...allStudentScores]
@@ -587,6 +603,54 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </div>
 
+          {/* Access History & Online Members Widget (Chỉ hiển thị cho GVCN) */}
+          {currentUser.role === 'admin' && (
+            <div className="bg-white rounded-2xl border border-indigo-200 bg-indigo-50/15 p-4 shadow-xs">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  <span>Lịch Sử Truy Cập Thành Viên</span>
+                </h4>
+                <button
+                  onClick={() => onNavigate('access-logs')}
+                  className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+                >
+                  <span>Chi tiết</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                  <div className="text-[10px] font-bold text-slate-500 uppercase">Tổng số lượt</div>
+                  <div className="text-base sm:text-lg font-black text-slate-900 font-mono mt-0.5">
+                    {(data.accessLogs || []).length} lượt
+                  </div>
+                </div>
+                <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                  <div className="text-[10px] font-bold text-emerald-700 uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Đang online</span>
+                  </div>
+                  <div className="text-base sm:text-lg font-black text-emerald-800 font-mono mt-0.5">
+                    {(data.accessLogs || []).filter(l => l.isOnline).length} người
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Số lần, trong bao lâu, ngày, giờ</span>
+                <button
+                  onClick={() => onNavigate('access-logs')}
+                  className="font-bold text-indigo-700 hover:text-indigo-900 cursor-pointer flex items-center gap-0.5"
+                >
+                  <span>Mở nhật ký</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Active Campaigns Widget */}
           <div className="bg-white rounded-2xl border border-amber-200 bg-amber-50/15 p-4 shadow-xs">
             <div className="flex items-center justify-between mb-2.5">
@@ -654,7 +718,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Award className="w-5 h-5 text-amber-500" />
                 <span>Top Gương Mặt Tiêu Biểu Tuần</span>
               </h3>
-              <p className="text-xs text-slate-500">Điểm thi đua cao nhất lớp</p>
+              <p className="text-xs text-slate-500">
+                {topTiedCount > 1 
+                  ? `Có ${topTiedCount} học sinh cùng dẫn đầu Hạng 1 (${topScoreVal}đ)`
+                  : 'Điểm thi đua cao nhất lớp'}
+              </p>
             </div>
             <button
               onClick={() => onNavigate('competition')}
@@ -665,14 +733,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="divide-y divide-slate-100">
-            {topStars.map((item, idx) => (
+            {rankedTopStars.map((item) => (
               <div key={item.student.id} className="py-2.5 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-lg bg-amber-50 text-amber-700 font-black flex items-center justify-center text-xs">
-                    #{idx + 1}
+                  <div className={`w-6 h-6 rounded-lg font-black flex items-center justify-center text-xs ${
+                    item.rank === 1 ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                    item.rank === 2 ? 'bg-slate-200 text-slate-800' :
+                    item.rank === 3 ? 'bg-amber-50 text-amber-800' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900 text-xs sm:text-sm">{item.student.name}</div>
+                    <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>{item.student.name}</span>
+                      {item.isTied && (
+                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1 rounded">
+                          Đồng #{item.rank}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-slate-400">
                       Tổ {item.student.teamId} • {item.student.roleTitle}
                     </div>

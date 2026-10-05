@@ -288,11 +288,13 @@ async function startServer() {
     const student = dbData.students.find(s => s.id === studentId);
     if (!student) return res.status(404).json({ error: 'Không tìm thấy học sinh.' });
     
-    if (userRole === 'to_truong' && teamId && student.teamId !== teamId) {
+    const isDirectLabor = Boolean(req.body.isDirectCampaignPoint || category === 'Lao động & Vệ sinh' || req.body.status === 'approved');
+    if (userRole === 'to_truong' && teamId && student.teamId !== teamId && !isDirectLabor) {
       return res.status(403).json({ error: 'Tổ trưởng chỉ được cộng/trừ điểm cho học sinh thuộc tổ của mình.' });
     }
     
-    const status = (dbData.config.requireApproval && userRole !== 'admin') ? 'pending' : 'approved';
+    // Điểm trực tiếp từ Lao động / Sự kiện luôn được ghi nhận thẳng vào sổ ('approved') không cần xác nhận lại
+    const status = isDirectLabor ? 'approved' : ((dbData.config.requireApproval && userRole !== 'admin') ? 'pending' : 'approved');
     const todayStr = new Date().toISOString().split('T')[0];
     
     const newTx: PointTransaction = {

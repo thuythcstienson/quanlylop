@@ -99,7 +99,8 @@ export const CampaignsView: React.FC = () => {
     rollbackCampaignPoints, 
     deleteCampaign,
     openConfirm,
-    showToast 
+    showToast,
+    hasPermission 
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>('all');
@@ -235,8 +236,9 @@ export const CampaignsView: React.FC = () => {
     if (!currentCampaign) return [];
     let list = currentCampaign.participants;
 
-    // If Team Leader: filter automatically to their team unless they have class-wide permissions
-    if (!canManageClassWide && (currentUser.role === 'to_truong' || currentUser.role === 'to_pho') && currentUser.teamId) {
+    const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+    // If Team Leader: in standard campaigns filter automatically to their team, in Lao động allow class-wide view or filter by team
+    if (!isLaoDong && !canManageClassWide && (currentUser.role === 'to_truong' || currentUser.role === 'to_pho') && currentUser.teamId) {
       list = list.filter(p => p.teamId === currentUser.teamId);
     } else if (teamFilter !== 'all') {
       list = list.filter(p => p.teamId === teamFilter);
@@ -372,22 +374,41 @@ export const CampaignsView: React.FC = () => {
     return 'Cuộc thi & Phong trào';
   };
 
-  // Single participant status update (hỗ trợ tự động cộng/trừ điểm trực tiếp nếu bật autoApply)
+  // Single participant status update (hỗ trợ tự động cộng/trừ điểm trực tiếp nếu là Lao động hoặc bật autoApply)
   const handleUpdateStatus = async (studentId: string, status: SubmissionStatus) => {
     if (!currentCampaign) return;
     const p = currentCampaign.participants.find(part => part.studentId === studentId);
     const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
 
-    if (autoApplyDirectPoint && (status === 'nop_muon' || status === 'khong_tham_gia' || status === 'da_nop' || status === 'xuat_sac')) {
+    // Trong phần Lao động / Sự kiện: Lớp trưởng hay cán sự lớp có quyền cộng, trừ điểm luôn khi nhấn "Có mặt", "Đi muộn", "Không đi", "Tích cực" mà không cần xác nhận lại
+    const shouldDirectApply = isLaoDong || autoApplyDirectPoint;
+
+    if (shouldDirectApply && (status === 'nop_muon' || status === 'khong_tham_gia' || status === 'da_nop' || status === 'xuat_sac')) {
       let pts = 0;
-      if (p?.customPoints !== undefined) pts = p.customPoints;
-      else if (status === 'nop_muon') pts = -currentCampaign.latePenaltyPoints;
-      else if (status === 'khong_tham_gia') pts = -currentCampaign.missPenaltyPoints;
-      else if (status === 'da_nop') pts = currentCampaign.rewardPoints;
-      else if (status === 'xuat_sac') pts = currentCampaign.rewardPoints + currentCampaign.bonusPoints;
+      if (p?.customPoints !== undefined && p.customPoints !== 0) {
+        pts = p.customPoints;
+      } else if (status === 'nop_muon') {
+        pts = -currentCampaign.latePenaltyPoints;
+      } else if (status === 'khong_tham_gia') {
+        pts = -currentCampaign.missPenaltyPoints;
+      } else if (status === 'da_nop') {
+        pts = currentCampaign.rewardPoints;
+      } else if (status === 'xuat_sac') {
+        pts = currentCampaign.rewardPoints + currentCampaign.bonusPoints;
+      }
 
       const reason = getStatusReasonText(status, isLaoDong);
       await applyDirectParticipantPoint(currentCampaign.id, studentId, pts, reason, status);
+      const sign = pts > 0 ? `+${pts}` : `${pts}`;
+      showToast(`✓ Đã ghi nhận ${sign}đ cho em ${p?.studentName || ''} (${reason})`, pts >= 0 ? 'success' : 'warning');
+    } else if (shouldDirectApply && status === 'chua_nop') {
+      // Khi nhấn "Chưa điểm danh": thu hồi điểm trực tiếp ngay lập tức
+      if (p?.appliedDirectly) {
+        await removeDirectParticipantPoint(currentCampaign.id, studentId);
+        showToast(`Đã hủy điểm danh & thu hồi điểm của em ${p?.studentName || ''}`, 'info');
+      } else {
+        await updateCampaignParticipant(currentCampaign.id, studentId, status);
+      }
     } else {
       await updateCampaignParticipant(currentCampaign.id, studentId, status);
     }
@@ -438,6 +459,22 @@ export const CampaignsView: React.FC = () => {
 
     const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
     const statusDesc = getStatusConfig(status, isLaoDong).label;
+
+    // Trong phần Lao động: điểm cộng/trừ trực tiếp không cần xác nhận lại
+    if (isLaoDong && (status === 'da_nop' || status === 'nop_muon' || status === 'khong_tham_gia')) {
+      let pts = 0;
+      if (status === 'da_nop') pts = currentCampaign.rewardPoints;
+      else if (status === 'nop_muon') pts = -currentCampaign.latePenaltyPoints;
+      else if (status === 'khong_tham_gia') pts = -currentCampaign.missPenaltyPoints;
+
+      const reason = getStatusReasonText(status, true);
+      for (const sid of targetIds) {
+        await applyDirectParticipantPoint(currentCampaign.id, sid, pts, reason, status);
+      }
+      showToast(`✓ Đã điểm danh & ghi nhận ${pts > 0 ? `+${pts}` : pts}đ cho ${targetIds.length} học sinh!`, 'success');
+      return;
+    }
+
     openConfirm({
       title: 'Cập nhật hàng loạt',
       message: `Đánh dấu "${statusDesc}" cho ${targetIds.length} học sinh đang hiển thị trong danh sách?`,
@@ -901,7 +938,12 @@ export const CampaignsView: React.FC = () => {
               </div>
 
               {/* Direct auto-apply toggle */}
-              {canMarkSubmissions && (
+              {currentCampaign.type === 'lao_dong_su_kien' ? (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-900 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold shadow-2xs">
+                  <Zap className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>⚡ Điểm danh Lao động: Nhấn Có mặt, Đi muộn, Không đi... cộng/trừ điểm trực tiếp ngay (không cần xác nhận lại)</span>
+                </div>
+              ) : canMarkSubmissions && (
                 <label className="flex items-center gap-1.5 text-xs text-slate-700 bg-amber-50 hover:bg-amber-100/80 px-2.5 py-1.5 rounded-xl border border-amber-200 cursor-pointer select-none font-medium transition-colors">
                   <input
                     type="checkbox"
@@ -942,8 +984,9 @@ export const CampaignsView: React.FC = () => {
                       filteredParticipants.map((p) => {
                         const student = data.students.find(s => s.id === p.studentId);
                         const isStudentTeamLeader = (currentUser.role === 'to_truong' || currentUser.role === 'to_pho') && currentUser.teamId === p.teamId;
-                        const canEditThisRow = canManageClassWide || isStudentTeamLeader;
                         const isLaoDong = currentCampaign.type === 'lao_dong_su_kien';
+                        const isCadre = ['admin', 'lop_truong', 'lop_pho_ht', 'lop_pho_nn', 'lop_pho_vtm', 'to_truong', 'to_pho'].includes(currentUser.role) || hasPermission('canMarkSubmissions');
+                        const canEditThisRow = isLaoDong ? isCadre : (canManageClassWide || isStudentTeamLeader);
                         const statusCfg = getStatusConfig(p.status, isLaoDong);
                         const expectedPt = getParticipantExpectedPoints(p, currentCampaign);
 

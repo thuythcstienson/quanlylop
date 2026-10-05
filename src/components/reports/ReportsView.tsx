@@ -27,6 +27,17 @@ export const ReportsView: React.FC = () => {
   const studentScores = getStudentLeaderboard(undefined, selectedWeek);
 
   const topStudents = studentScores.slice(0, 5);
+  let curTopRank = 1;
+  const rankedTopStudents = topStudents.map((s, idx, arr) => {
+    if (idx > 0 && s.currentPoints < arr[idx - 1].currentPoints) {
+      curTopRank = idx + 1;
+    }
+    return {
+      ...s,
+      rank: curTopRank,
+      isTied: studentScores.filter(o => o.currentPoints === s.currentPoints).length > 1,
+    };
+  });
   const warnedStudents = [...studentScores]
     .filter(s => s.violationCount > 0)
     .sort((a, b) => b.violationCount - a.violationCount)
@@ -240,16 +251,19 @@ export const ReportsView: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="bg-slate-50 font-bold text-slate-600">
                   <tr>
-                    <th className="py-2 px-3 text-center w-10">STT</th>
+                    <th className="py-2 px-3 text-center w-14">Hạng</th>
                     <th className="py-2 px-3">Học sinh</th>
                     <th className="py-2 px-3 text-center">Tổ</th>
                     <th className="py-2 px-3 text-center">Điểm</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {topStudents.map((s, idx) => (
+                  {rankedTopStudents.map((s) => (
                     <tr key={s.student.id}>
-                      <td className="py-1.5 px-3 text-center font-bold text-slate-500">{idx + 1}</td>
+                      <td className="py-1.5 px-3 text-center font-bold text-slate-700">
+                        {s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : `#${s.rank}`}
+                        {s.isTied && <span className="text-[9px] text-amber-700 font-semibold block leading-tight">đồng #{s.rank}</span>}
+                      </td>
                       <td className="py-1.5 px-3 font-bold text-slate-800">{s.student.name}</td>
                       <td className="py-1.5 px-3 text-center">Tổ {s.student.teamId}</td>
                       <td className="py-1.5 px-3 text-center font-black text-emerald-700">

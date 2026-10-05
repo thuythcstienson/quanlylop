@@ -627,7 +627,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       list = list.filter(s => s.teamId === teamId);
     }
     const scores = list.map(s => getStudentScore(s.id, weekNumber, month));
-    return scores.sort((a, b) => b.currentPoints - a.currentPoints);
+    return scores.sort((a, b) => {
+      if (b.currentPoints !== a.currentPoints) {
+        return b.currentPoints - a.currentPoints;
+      }
+      if (b.totalCong !== a.totalCong) {
+        return b.totalCong - a.totalCong;
+      }
+      if (a.totalTru !== b.totalTru) {
+        return a.totalTru - b.totalTru;
+      }
+      return a.student.stt - b.student.stt;
+    });
   };
 
   const getTeamLeaderboard = (weekNumber?: number, month?: number): TeamScoreSummary[] => {
@@ -665,10 +676,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
     });
 
-    // Rank teams by average points
+    // Rank teams by average points with tie-awareness (đồng hạng nếu bằng điểm TB)
     teams.sort((a, b) => b.avgPoints - a.avgPoints);
-    teams.forEach((t, idx) => {
-      t.rank = idx + 1;
+    let curTeamRank = 1;
+    teams.forEach((t, idx, arr) => {
+      if (idx > 0 && t.avgPoints < arr[idx - 1].avgPoints) {
+        curTeamRank = idx + 1;
+      }
+      t.rank = curTeamRank;
     });
 
     return teams;
@@ -1799,6 +1814,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Đã đưa hệ thống về dữ liệu mẫu ban đầu!', 'info');
   };
 
+  // --- ACCESS LOGS & SESSION TRACKING ---
+  const refreshAccessLogs = async () => {
+    try {
+      const res = await fetch('/api/access-logs');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.accessLogs) {
+          setData(prev => ({
+            ...prev,
+            accessLogs: json.accessLogs,
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Could not refresh access logs from server:', e);
+    }
+  };
+
+  const clearAccessLogs = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/access-logs', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        setData(prev => ({
+          ...prev,
+          accessLogs: [],
+        }));
+        showToast('✓ Đã xóa sạch lịch sử truy cập thành công!', 'success');
+        return true;
+      }
+      showToast('Không thể xóa lịch sử truy cập.', 'error');
+      return false;
+    } catch {
+      setData(prev => ({
+        ...prev,
+        accessLogs: [],
+      }));
+      showToast('Đã làm mới lịch sử truy cập cục bộ.', 'info');
+      return true;
+    }
+  };
+
+  const recordActivity = () => {
+    // Local ping trigger if needed
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1862,6 +1926,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         restoreSnapshot,
         refreshDataFromServer,
         resetDemoData,
+        refreshAccessLogs,
+        clearAccessLogs,
+        recordActivity,
       }}
     >
       {children}

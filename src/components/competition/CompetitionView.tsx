@@ -141,15 +141,55 @@ export const CompetitionView: React.FC = () => {
     return (total / studentScores.length).toFixed(1);
   }, [studentScores]);
 
-  const topScore = useMemo(() => {
-    if (studentScores.length === 0) return 100;
-    return Math.max(...studentScores.map(s => s.currentPoints));
+  const topStudents = useMemo(() => {
+    if (studentScores.length === 0) return [];
+    const maxScore = Math.max(...studentScores.map(s => s.currentPoints));
+    return studentScores.filter(s => s.currentPoints === maxScore);
   }, [studentScores]);
 
-  const topStudent = useMemo(() => {
-    if (studentScores.length === 0) return null;
-    return [...studentScores].sort((a, b) => b.currentPoints - a.currentPoints)[0];
-  }, [studentScores]);
+  const topStudent = topStudents[0] || null;
+  const topScore = topStudents.length > 0 ? topStudents[0].currentPoints : 100;
+
+  // Xếp hạng cá nhân chuẩn sư phạm với hỗ trợ Đồng Hạng khi bằng điểm nhau
+  const rankedStudentScores = useMemo(() => {
+    if (sortBy === 'points') {
+      let currentRank = 1;
+      return studentScores.map((item, idx, arr) => {
+        if (idx > 0 && item.currentPoints < arr[idx - 1].currentPoints) {
+          currentRank = idx + 1;
+        }
+        const tiedGroup = arr.filter(o => o.currentPoints === item.currentPoints);
+        return {
+          ...item,
+          rank: currentRank,
+          isTied: tiedGroup.length > 1,
+          tiedCount: tiedGroup.length,
+        };
+      });
+    }
+
+    // Khi sắp xếp theo tiêu chí khác (STT, tên, vi phạm): vẫn tính đúng thứ hạng thi đua theo điểm số
+    const pointsOrder = [...studentScores].sort((a, b) => b.currentPoints - a.currentPoints);
+    const rankMap = new Map<string, { rank: number; isTied: boolean; tiedCount: number }>();
+    let r = 1;
+    pointsOrder.forEach((item, idx, arr) => {
+      if (idx > 0 && item.currentPoints < arr[idx - 1].currentPoints) {
+        r = idx + 1;
+      }
+      const tiedGroup = arr.filter(o => o.currentPoints === item.currentPoints);
+      rankMap.set(item.student.id, { rank: r, isTied: tiedGroup.length > 1, tiedCount: tiedGroup.length });
+    });
+
+    return studentScores.map(item => {
+      const info = rankMap.get(item.student.id) || { rank: 1, isTied: false, tiedCount: 1 };
+      return {
+        ...item,
+        rank: info.rank,
+        isTied: info.isTied,
+        tiedCount: info.tiedCount,
+      };
+    });
+  }, [studentScores, sortBy]);
 
   const excellentCount = useMemo(() => {
     return studentScores.filter(s => s.currentPoints >= 100).length;
@@ -311,12 +351,23 @@ export const CompetitionView: React.FC = () => {
         </div>
 
         <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dẫn đầu lớp</div>
-          <div className="text-base sm:text-lg font-black text-amber-600 mt-0.5 truncate">
-            {topStudent ? topStudent.student.name : '—'}
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+            <span>Dẫn đầu lớp</span>
+            {topStudents.length > 1 && (
+              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-md border border-amber-300">
+                Đồng hạng 1 ({topStudents.length} HS)
+              </span>
+            )}
           </div>
-          <div className="text-[11px] text-slate-500 font-medium">
-            🥇 {topScore} điểm ({topStudent?.rankTitle || 'Xuất sắc'})
+          <div className="text-base sm:text-lg font-black text-amber-600 mt-0.5 truncate" title={topStudents.map(s => s.student.name).join(', ')}>
+            {topStudents.length > 1 
+              ? `${topStudents.length} học sinh cùng dẫn đầu`
+              : (topStudent ? topStudent.student.name : '—')}
+          </div>
+          <div className="text-[11px] text-slate-500 font-medium truncate" title={topStudents.map(s => s.student.name).join(', ')}>
+            🥇 {topScore} điểm {topStudents.length > 1 
+              ? `(${topStudents.map(s => s.student.name).slice(0, 2).join(', ')}${topStudents.length > 2 ? ` và ${topStudents.length - 2} bạn khác` : ''})` 
+              : `(${topStudent?.rankTitle || 'Xuất sắc'})`}
           </div>
         </div>
 
@@ -440,9 +491,9 @@ export const CompetitionView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {studentScores.map((item, idx) => {
-                    const isTop3 = sortBy === 'points' && idx < 3;
-                    const rankMedal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1;
+                  {rankedStudentScores.map((item) => {
+                    const isTopRank = item.rank <= 3;
+                    const rankMedal = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank;
 
                     let rankBadge = 'bg-emerald-50 text-emerald-800 border-emerald-200';
                     if (item.rankTitle === 'Xuất sắc') rankBadge = 'bg-indigo-50 text-indigo-800 border-indigo-200 font-black';
@@ -454,21 +505,38 @@ export const CompetitionView: React.FC = () => {
                       <tr 
                         key={item.student.id} 
                         className={`hover:bg-indigo-50/40 transition-colors ${
-                          isTop3 ? 'bg-amber-50/25' : 'even:bg-slate-50/30'
+                          item.rank === 1 ? 'bg-amber-50/30' : isTopRank ? 'bg-slate-50/60' : 'even:bg-slate-50/30'
                         }`}
                       >
-                        {/* Hạng */}
+                        {/* Hạng (Hỗ trợ đồng hạng chuẩn sư phạm) */}
                         <td className="py-2.5 px-3 text-center font-black text-sm">
                           {sortBy === 'points' ? (
-                            isTop3 ? (
-                              <span className="text-base select-none">{rankMedal}</span>
+                            isTopRank ? (
+                              <div className="flex flex-col items-center justify-center">
+                                <span className="text-base select-none leading-none">{rankMedal}</span>
+                                {item.isTied && (
+                                  <span className="text-[9px] text-amber-900 font-bold bg-amber-100/90 border border-amber-300 px-1 rounded mt-0.5 leading-tight">
+                                    Đồng #{item.rank}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 inline-flex items-center justify-center text-xs font-bold">
-                                {idx + 1}
-                              </span>
+                              <div className="flex flex-col items-center justify-center">
+                                <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 inline-flex items-center justify-center text-xs font-bold">
+                                  {item.rank}
+                                </span>
+                                {item.isTied && (
+                                  <span className="text-[9px] text-slate-400 font-medium">
+                                    đồng #{item.rank}
+                                  </span>
+                                )}
+                              </div>
                             )
                           ) : (
-                            <span className="text-slate-400 font-normal">—</span>
+                            <div className="flex flex-col items-center justify-center">
+                              <span className="text-xs font-bold text-slate-700">#{item.rank}</span>
+                              {item.isTied && <span className="text-[9px] text-slate-400">đồng hạng</span>}
+                            </div>
                           )}
                         </td>
 
