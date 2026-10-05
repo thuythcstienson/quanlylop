@@ -1193,20 +1193,57 @@ async function startServer() {
     const camp = dbData.campaigns.find(c => c.id === id);
     if (!camp) return res.status(404).json({ error: 'Không tìm thấy cuộc thi / chiến dịch.' });
     
-    const txIds = new Set(camp.participants.map(p => p.transactionId).filter(Boolean));
-    dbData.transactions = dbData.transactions.filter(t => !txIds.has(t.id));
+    const campTitle = (camp.title || '').trim();
+    const campTitleLower = campTitle.toLowerCase();
+    const explicitTxIds = new Set(
+      (camp.participants || []).map(p => p.transactionId).filter(Boolean) as string[]
+    );
+    
+    const initialTxCount = dbData.transactions.length;
+    dbData.transactions = dbData.transactions.filter(t => {
+      // 1. Transaction linked directly via participant
+      if (explicitTxIds.has(t.id)) return false;
+      // 2. Transaction ID generated with camp id
+      if (t.id && (t.id.includes(camp.id) || t.id.includes(`_${camp.id}_`))) return false;
+      // 3. Title contains event tag or campaign title
+      if (campTitle && t.title) {
+        const titleLower = t.title.toLowerCase();
+        if (
+          t.title.includes(`: ${campTitle}]`) ||
+          (t.title.startsWith('[') && titleLower.includes(campTitleLower)) ||
+          (campTitle.length >= 4 && titleLower.includes(campTitleLower))
+        ) {
+          return false;
+        }
+      }
+      // 4. Notes mention this campaign
+      if (campTitle && t.notes) {
+        const notesLower = t.notes.toLowerCase();
+        if (
+          notesLower.includes(`từ ${campTitleLower}`) ||
+          notesLower.includes(campTitleLower) ||
+          t.notes.includes(camp.id)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+    
+    const deletedCount = initialTxCount - dbData.transactions.length;
     
     camp.participants.forEach(p => {
       p.transactionId = undefined;
       p.pointsAwarded = undefined;
+      p.appliedDirectly = false;
     });
     
     camp.pointsApplied = false;
     camp.pointsAppliedAt = undefined;
     saveDatabase(dbData);
     
-    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Hủy điểm chiến dịch', `Hủy toàn bộ cộng/trừ điểm tự động của chiến dịch: ${camp.title}`);
-    res.json({ success: true, campaign: camp });
+    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Hủy điểm chiến dịch', `Hủy toàn bộ ${deletedCount} lượt cộng/trừ/biểu dương liên quan của: "${camp.title}"`);
+    res.json({ success: true, campaign: camp, deletedCount, transactions: dbData.transactions });
   });
 
   app.delete('/api/campaigns/:id', (req: Request, res: Response) => {
@@ -1215,20 +1252,106 @@ async function startServer() {
     
     if (!dbData.campaigns) dbData.campaigns = [];
     const index = dbData.campaigns.findIndex(c => c.id === id);
-    if (index === -1) return res.status(404).json({ error: 'Không tìm thấy cuộc thi / chiến dịch.' });
+    if (index === -1) return res.status(404).json({ error: 'Không tìm thấy sự kiện / cuộc thi / chiến dịch.' });
     
     const camp = dbData.campaigns[index];
+    const campTitle = (camp.title || '').trim();
+    const campTitleLower = campTitle.toLowerCase();
     
-    if (camp.pointsApplied) {
-      const txIds = new Set(camp.participants.map(p => p.transactionId).filter(Boolean));
-      dbData.transactions = dbData.transactions.filter(t => !txIds.has(t.id));
+    // 1. Thu thập toàn bộ ID giao dịch từ danh sách người tham gia
+    const explicitTxIds = new Set(
+      (camp.participants || []).map(p => p.transactionId).filter(Boolean) as string[]
+    );
+    
+    // 2. Xóa sạch mọi điểm cộng ('cong'), điểm trừ ('tru') và biểu dương ('bieu_duong') liên quan
+    const initialTxCount = dbData.transactions.length;
+    dbData.transactions = dbData.transactions.filter(t => {
+      // Khớp trực tiếp mã giao dịch từ học sinh tham gia
+      if (explicitTxIds.has(t.id)) return false;
+      
+      // Khớp theo ID chiến dịch/sự kiện
+      if (t.id && (t.id.includes(camp.id) || t.id.includes(`_${camp.id}_`))) return false;
+      
+      // Khớp theo tiêu đề (VD: [Lao động / Sự kiện: ...], [Cuộc thi: ...])
+      if (campTitle && t.title) {
+        const titleLower = t.title.toLowerCase();
+        if (
+          t.title.includes(`: ${campTitle}]`) ||
+          (t.title.startsWith('[') && titleLower.includes(campTitleLower)) ||
+          (campTitle.length >= 4 && titleLower.includes(campTitleLower))
+        ) {
+          return false;
+        }
+      }
+      
+      // Khớp theo ghi chú (VD: Ghi nhận trực tiếp từ ..., Ghi nhận từ ...)
+      if (campTitle && t.notes) {
+        const notesLower = t.notes.toLowerCase();
+        if (
+          notesLower.includes(`từ ${campTitleLower}`) ||
+          notesLower.includes(campTitleLower) ||
+          t.notes.includes(camp.id)
+        ) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    const deletedTxCount = initialTxCount - dbData.transactions.length;
+    
+    // 3. Xóa các thông báo liên quan đến sự kiện/cuộc thi này nếu có
+    let deletedAnnouncementsCount = 0;
+    if (dbData.announcements && campTitle) {
+      const initAnnCount = dbData.announcements.length;
+      dbData.announcements = dbData.announcements.filter(a => {
+        const titleMatch = a.title && a.title.toLowerCase().includes(campTitleLower);
+        const contentMatch = a.content && a.content.toLowerCase().includes(campTitleLower);
+        return !(titleMatch || contentMatch);
+      });
+      deletedAnnouncementsCount = initAnnCount - dbData.announcements.length;
     }
     
+    // 4. Xóa các nhận xét/đánh giá liên quan nếu có
+    let deletedEvalsCount = 0;
+    if (dbData.evaluations && campTitle) {
+      const initEvalCount = dbData.evaluations.length;
+      dbData.evaluations = dbData.evaluations.filter(e => {
+        return !(e.content && e.content.toLowerCase().includes(campTitleLower));
+      });
+      deletedEvalsCount = initEvalCount - dbData.evaluations.length;
+    }
+    
+    // 5. Xóa sự kiện/cuộc thi khỏi cơ sở dữ liệu
     dbData.campaigns.splice(index, 1);
     saveDatabase(dbData);
     
-    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa cuộc thi/chiến dịch', `Đã xóa vĩnh viễn chiến dịch: ${camp.title}`);
-    res.json({ success: true });
+    const typeLabel = camp.type === 'lao_dong_su_kien' 
+      ? 'sự kiện / buổi lao động' 
+      : camp.type === 'cuoc_thi' 
+        ? 'cuộc thi' 
+        : 'chiến dịch phong trào';
+
+    addAuditLog(
+      'admin', 
+      adminName || 'GVCN', 
+      'admin', 
+      'Xóa sự kiện/lao động/cuộc thi', 
+      `Đã xóa vĩnh viễn ${typeLabel}: "${camp.title}". Tự động xóa sạch ${deletedTxCount} lượt điểm cộng/trừ/biểu dương liên quan.`
+    );
+    
+    res.json({ 
+      success: true, 
+      deletedCampaignId: id,
+      deletedTxCount,
+      deletedAnnouncementsCount,
+      deletedEvalsCount,
+      transactions: dbData.transactions,
+      campaigns: dbData.campaigns,
+      announcements: dbData.announcements,
+      evaluations: dbData.evaluations,
+    });
   });
 
   app.post('/api/evaluations', (req: Request, res: Response) => {

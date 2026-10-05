@@ -337,9 +337,11 @@ export const CampaignsView: React.FC = () => {
 
   // Confirm delete
   const handleDeleteCampaign = (c: Campaign) => {
+    const isLaoDong = c.type === 'lao_dong_su_kien';
+    const typeLabel = isLaoDong ? 'buổi lao động / sự kiện' : c.type === 'cuoc_thi' ? 'cuộc thi' : 'chiến dịch';
     openConfirm({
-      title: 'Xác nhận xóa',
-      message: `Bạn có chắc chắn muốn xóa cuộc thi/chiến dịch "${c.title}"? Nếu đã áp dụng điểm vào sổ thi đua, các giao dịch điểm sẽ được tự động gỡ bỏ.`,
+      title: `Xác nhận xóa ${typeLabel}`,
+      message: `Bạn có chắc chắn muốn xóa "${c.title}"?\n\nToàn bộ dữ liệu điểm cộng, điểm trừ, điểm danh và biểu dương liên quan đến ${typeLabel} này sẽ được tự động xóa sạch hoàn toàn khỏi sổ thi đua của lớp.`,
       onConfirm: async () => {
         await deleteCampaign(c.id);
         if (selectedCampaignId === c.id) {
@@ -1328,6 +1330,33 @@ export const CampaignsView: React.FC = () => {
                             <Clock className="w-3 h-3" />
                             <span>Đang diễn ra</span>
                           </span>
+                        )}
+
+                        {canEditOrDelete && (
+                          <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditModal(camp);
+                              }}
+                              className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                              title="Chỉnh sửa thông tin"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCampaign(camp);
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Xóa sự kiện / cuộc thi và điểm liên quan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </div>
 

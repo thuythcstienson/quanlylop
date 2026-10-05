@@ -1553,8 +1553,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         body: JSON.stringify({ adminName: currentUser.displayName }),
       });
       if (res.ok) {
-        await refreshDataFromServer();
-        showToast('Đã thu hồi điểm đã áp dụng của chiến dịch.', 'info');
+        const resJson = await res.json().catch(() => null);
+        if (resJson && resJson.transactions) {
+          setData(prev => ({
+            ...prev,
+            transactions: resJson.transactions,
+            campaigns: (prev.campaigns || []).map(c => c.id === campaignId ? resJson.campaign : c),
+          }));
+        } else {
+          await refreshDataFromServer();
+        }
+        showToast('Đã thu hồi toàn bộ điểm cộng/trừ/biểu dương liên quan của chiến dịch.', 'info');
         return true;
       }
     } catch (e) {
@@ -1564,6 +1573,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteCampaign = async (id: string): Promise<boolean> => {
+    const targetCamp = (data.campaigns || []).find(c => c.id === id);
+    const campTitle = (targetCamp?.title || '').trim();
+    const campTitleLower = campTitle.toLowerCase();
+    const campTxIds = new Set(
+      targetCamp ? (targetCamp.participants || []).map(p => p.transactionId).filter(Boolean) as string[] : []
+    );
+
     try {
       const res = await fetch(`/api/campaigns/${id}`, {
         method: 'DELETE',
@@ -1571,22 +1587,83 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         body: JSON.stringify({ adminName: currentUser.displayName }),
       });
       if (res.ok) {
-        setData(prev => ({
-          ...prev,
-          campaigns: (prev.campaigns || []).filter(c => c.id !== id),
-        }));
-        showToast('Đã xóa cuộc thi / chiến dịch.', 'info');
+        const resJson = await res.json().catch(() => null);
+        if (resJson && resJson.transactions && resJson.campaigns) {
+          setData(prev => ({
+            ...prev,
+            campaigns: resJson.campaigns,
+            transactions: resJson.transactions,
+            announcements: resJson.announcements || prev.announcements,
+            evaluations: resJson.evaluations || prev.evaluations,
+          }));
+        } else {
+          setData(prev => ({
+            ...prev,
+            campaigns: (prev.campaigns || []).filter(c => c.id !== id),
+            transactions: prev.transactions.filter(t => {
+              if (campTxIds.has(t.id)) return false;
+              if (t.id && (t.id.includes(id) || t.id.includes(`_${id}_`))) return false;
+              if (campTitle && t.title) {
+                const titleLower = t.title.toLowerCase();
+                if (
+                  t.title.includes(`: ${campTitle}]`) ||
+                  (t.title.startsWith('[') && titleLower.includes(campTitleLower)) ||
+                  (campTitle.length >= 4 && titleLower.includes(campTitleLower))
+                ) return false;
+              }
+              if (campTitle && t.notes) {
+                const notesLower = t.notes.toLowerCase();
+                if (notesLower.includes(`từ ${campTitleLower}`) || notesLower.includes(campTitleLower) || t.notes.includes(id)) return false;
+              }
+              return true;
+            }),
+            announcements: (prev.announcements || []).filter(a => {
+              if (campTitle) {
+                const titleMatch = a.title && a.title.toLowerCase().includes(campTitleLower);
+                const contentMatch = a.content && a.content.toLowerCase().includes(campTitleLower);
+                return !(titleMatch || contentMatch);
+              }
+              return true;
+            }),
+            evaluations: (prev.evaluations || []).filter(e => {
+              if (campTitle) {
+                return !(e.content && e.content.toLowerCase().includes(campTitleLower));
+              }
+              return true;
+            }),
+          }));
+        }
+        const countMsg = resJson?.deletedTxCount ? ` (Đã xóa toàn bộ ${resJson.deletedTxCount} lượt điểm cộng/trừ/biểu dương liên quan)` : '';
+        showToast(`Đã xóa sự kiện / cuộc thi thành công${countMsg}.`, 'success');
         return true;
       }
     } catch (e) {
       console.warn(e);
     }
 
+    // Local fallback
     setData(prev => ({
       ...prev,
       campaigns: (prev.campaigns || []).filter(c => c.id !== id),
+      transactions: prev.transactions.filter(t => {
+        if (campTxIds.has(t.id)) return false;
+        if (t.id && (t.id.includes(id) || t.id.includes(`_${id}_`))) return false;
+        if (campTitle && t.title) {
+          const titleLower = t.title.toLowerCase();
+          if (
+            t.title.includes(`: ${campTitle}]`) ||
+            (t.title.startsWith('[') && titleLower.includes(campTitleLower)) ||
+            (campTitle.length >= 4 && titleLower.includes(campTitleLower))
+          ) return false;
+        }
+        if (campTitle && t.notes) {
+          const notesLower = t.notes.toLowerCase();
+          if (notesLower.includes(`từ ${campTitleLower}`) || notesLower.includes(campTitleLower) || t.notes.includes(id)) return false;
+        }
+        return true;
+      }),
     }));
-    showToast('Đã xóa cuộc thi / chiến dịch.', 'info');
+    showToast('Đã xóa sự kiện / cuộc thi và các điểm thi đua liên quan.', 'info');
     return true;
   };
 
