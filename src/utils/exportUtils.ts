@@ -380,8 +380,8 @@ export function exportToWordDoc(
   const teacherNotes = options.teacherNotes || 'Đa số các em chấp hành tốt nội quy nề nếp, chuẩn bị bài đầy đủ. Các tổ trưởng đã phát huy tốt tinh thần trách nhiệm. Cần tăng cường đôn đốc các bạn hay đi muộn và quên sách vở.';
   const classMonitorName = options.classMonitor || (students?.find(s => s.roleTitle?.toLowerCase().includes('lớp trưởng'))?.name) || 'Tạ Thục Quyên';
 
-  // Calculate scores
-  const studentScores = students.map((s, idx) => {
+  // Calculate student scores with ranks
+  const rawStudentScores = students.map((s, idx) => {
     let cong = 0;
     let tru = 0;
     transactions.forEach(t => {
@@ -400,23 +400,79 @@ export function exportToWordDoc(
     return { student: s, stt: s.stt || idx + 1, cong, tru, total, rankTitle };
   }).sort((a, b) => b.total - a.total);
 
+  let currentRank = 1;
+  const studentScores = rawStudentScores.map((item, idx, arr) => {
+    if (idx > 0 && item.total < arr[idx - 1].total) {
+      currentRank = idx + 1;
+    }
+    const isTied = arr.filter(o => o.total === item.total).length > 1;
+    return {
+      ...item,
+      rank: currentRank,
+      isTied,
+    };
+  });
+
   // Teams breakdown
   const teamStats = [1, 2, 3, 4].map(tId => {
     const list = studentScores.filter(item => item.student.teamId === tId);
     const sum = list.reduce((acc, curr) => acc + curr.total, 0);
+    const sumCong = list.reduce((acc, curr) => acc + curr.cong, 0);
+    const sumTru = list.reduce((acc, curr) => acc + curr.tru, 0);
     const avg = list.length > 0 ? (sum / list.length).toFixed(2) : '0';
-    return { teamId: tId, count: list.length, sum, avg: Number(avg) };
+    const leader = students.find(s => s.teamId === tId && s.roleTitle?.includes('Tổ trưởng'))?.name || '—';
+    let teamRankTitle = 'Khá';
+    const numAvg = Number(avg);
+    if (numAvg >= 105) teamRankTitle = 'Xuất sắc';
+    else if (numAvg >= 95) teamRankTitle = 'Tốt';
+    else if (numAvg >= 85) teamRankTitle = 'Khá';
+    else teamRankTitle = 'Cần cố gắng';
+
+    return { 
+      teamId: tId, 
+      leader, 
+      count: list.length, 
+      sumCong, 
+      sumTru, 
+      sum, 
+      avg: numAvg, 
+      teamRankTitle 
+    };
   }).sort((a, b) => b.avg - a.avg);
+
+  // Class totals
+  const totalClassStudents = students.length;
+  const totalClassCong = studentScores.reduce((acc, curr) => acc + curr.cong, 0);
+  const totalClassTru = studentScores.reduce((acc, curr) => acc + curr.tru, 0);
+  const totalClassSum = studentScores.reduce((acc, curr) => acc + curr.total, 0);
+  const classAvg = totalClassStudents > 0 ? (totalClassSum / totalClassStudents).toFixed(2) : '0';
+
+  // Category statistics
+  const categories = ['Học tập', 'Nề nếp', 'Văn thể mỹ', 'Vệ sinh - Trực nhật'];
+  const categoryStats = categories.map((cat, idx) => {
+    const catTxs = transactions.filter(t => t.weekNumber === weekNumber && (t.category?.toLowerCase().includes(cat.toLowerCase()) || cat.toLowerCase().includes(t.category?.toLowerCase() || '')));
+    const congCount = catTxs.filter(t => t.type === 'cong').length;
+    const truCount = catTxs.filter(t => t.type === 'tru').length;
+    const netPoints = catTxs.reduce((acc, t) => acc + (t.status === 'approved' ? t.points : 0), 0);
+    return {
+      stt: idx + 1,
+      name: cat === 'Nề nếp' ? 'Nề nếp & Kỷ luật' : cat === 'Văn thể mỹ' ? 'Văn thể mỹ & Hoạt động chung' : cat,
+      congCount,
+      truCount,
+      netPoints,
+      rate: truCount === 0 ? 'Tốt (100%)' : truCount <= 2 ? 'Khá (95%)' : 'Cần chấn chỉnh'
+    };
+  });
 
   // Commended students
   const commended = transactions
-    .filter(t => t.weekNumber === weekNumber && (t.type === 'bieu_duong' || t.points >= 3))
-    .slice(0, 10);
+    .filter(t => t.weekNumber === weekNumber && (t.type === 'bieu_duong' || t.points >= 2))
+    .slice(0, 15);
 
   // Reminded students (violations)
   const warned = transactions
     .filter(t => t.weekNumber === weekNumber && t.type === 'tru')
-    .slice(0, 10);
+    .slice(0, 15);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -426,19 +482,20 @@ export function exportToWordDoc(
       <title>Báo cáo thi đua tuần ${weekNumber}</title>
       <style>
         body { font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.4; color: #000; margin: 20px; }
-        .header-table { width: 100%; border: none; margin-bottom: 20px; }
+        .header-table { width: 100%; border: none; margin-bottom: 16px; border-collapse: collapse; }
         .header-table td { border: none; vertical-align: top; }
         .center { text-align: center; }
+        .left { text-align: left; }
+        .right { text-align: right; }
         .bold { font-weight: bold; }
-        .title { font-size: 16pt; font-weight: bold; text-align: center; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; }
-        .subtitle { font-size: 13pt; font-style: italic; text-align: center; margin-bottom: 20px; }
-        table.data-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11pt; }
-        table.data-table th, table.data-table td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
-        table.data-table th { background-color: #f2f2f2; text-align: center; font-weight: bold; }
-        .section-title { font-size: 13pt; font-weight: bold; margin-top: 18px; margin-bottom: 6px; }
-        .signature-table { width: 100%; border: none; margin-top: 30px; }
+        .title { font-size: 16pt; font-weight: bold; text-align: center; margin-top: 14px; margin-bottom: 4px; text-transform: uppercase; }
+        .subtitle { font-size: 13pt; font-style: italic; text-align: center; margin-bottom: 16px; }
+        table.data-table { width: 100%; border-collapse: collapse; margin: 12px 0 16px 0; font-size: 11pt; }
+        table.data-table th, table.data-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; }
+        table.data-table th { background-color: #f1f5f9; text-align: center; font-weight: bold; }
+        .section-title { font-size: 13pt; font-weight: bold; margin-top: 18px; margin-bottom: 6px; text-transform: uppercase; }
+        .signature-table { width: 100%; border: none; margin-top: 25px; border-collapse: collapse; }
         .signature-table td { border: none; text-align: center; width: 50%; vertical-align: top; }
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10pt; }
       </style>
     </head>
     <body>
@@ -447,32 +504,38 @@ export function exportToWordDoc(
           <td class="center" style="width: 45%;">
             <div>UBND PHƯỜNG VÂN HÀ</div>
             <div class="bold">TRƯỜNG THCS VÂN HÀ 2</div>
-            <div style="width: 120px; border-bottom: 1px solid #000; margin: 4px auto;"></div>
+            <div style="font-size: 11pt;">Lớp 9A1 • Năm học ${config.schoolYear}</div>
+            <div style="width: 120px; border-bottom: 1.5px solid #000; margin: 4px auto 0 auto;"></div>
           </td>
           <td class="center" style="width: 55%;">
             <div class="bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
             <div class="bold">Độc lập – Tự do – Hạnh phúc</div>
-            <div style="width: 160px; border-bottom: 1px solid #000; margin: 4px auto;"></div>
+            <div style="width: 160px; border-bottom: 1.5px solid #000; margin: 4px auto 0 auto;"></div>
           </td>
         </tr>
       </table>
 
       <div class="title">BÁO CÁO THI ĐUA NỀ NẾP & HỌC TẬP</div>
-      <div class="subtitle">LỚP 9A1 – TUẦN ${weekNumber} (NĂM HỌC ${config.schoolYear})</div>
+      <div class="subtitle">TUẦN THỨ ${weekNumber} – NĂM HỌC ${config.schoolYear}</div>
 
-      <div><strong>Giáo viên chủ nhiệm:</strong> ${config.teacherName}</div>
-      <div><strong>Sĩ số:</strong> ${config.totalStudents} học sinh</div>
-      <div><strong>Thời gian báo cáo:</strong> ${new Date().toLocaleDateString('vi-VN')}</div>
+      <div style="font-size: 11.5pt; margin-bottom: 12px;">
+        <div><strong>Giáo viên chủ nhiệm:</strong> ${config.teacherName}</div>
+        <div><strong>Ban cán sự lớp:</strong> Lớp trưởng: ${classMonitorName} • Sĩ số: ${config.totalStudents} học sinh</div>
+        <div><strong>Thời gian báo cáo:</strong> ${new Date().toLocaleDateString('vi-VN')}</div>
+      </div>
 
       <div class="section-title">I. BẢNG XẾP HẠNG THI ĐUA CÁC TỔ</div>
       <table class="data-table">
         <thead>
           <tr>
-            <th style="width: 15%;">Hạng</th>
-            <th style="width: 25%;">Tên Tổ</th>
-            <th style="width: 20%;">Sĩ số</th>
-            <th style="width: 20%;">Tổng điểm</th>
-            <th style="width: 20%;">Điểm Trung bình</th>
+            <th style="width: 8%;">Hạng</th>
+            <th style="width: 16%;">Tên Tổ</th>
+            <th style="width: 18%;">Tổ trưởng</th>
+            <th style="width: 10%;">Sĩ số</th>
+            <th style="width: 12%;">Điểm cộng</th>
+            <th style="width: 12%;">Điểm trừ</th>
+            <th style="width: 12%;">Điểm TB</th>
+            <th style="width: 12%;">Xếp loại</th>
           </tr>
         </thead>
         <tbody>
@@ -480,15 +543,84 @@ export function exportToWordDoc(
             <tr>
               <td class="center bold">${idx + 1}</td>
               <td class="bold">Tổ ${t.teamId}</td>
+              <td>${t.leader}</td>
               <td class="center">${t.count}</td>
-              <td class="center">${t.sum}</td>
-              <td class="center bold">${t.avg}</td>
+              <td class="center" style="color: #047857; font-weight: bold;">+${t.sumCong}</td>
+              <td class="center" style="color: #be123c; font-weight: bold;">-${t.sumTru}</td>
+              <td class="center bold" style="background-color: #f8fafc;">${t.avg}</td>
+              <td class="center bold">${t.teamRankTitle}</td>
+            </tr>
+          `).join('')}
+          <tr style="background-color: #f1f5f9; font-weight: bold;">
+            <td class="center bold">Tổng</td>
+            <td class="bold">Toàn lớp 9A1</td>
+            <td>BCS Lớp</td>
+            <td class="center">${totalClassStudents}</td>
+            <td class="center" style="color: #047857;">+${totalClassCong}</td>
+            <td class="center" style="color: #be123c;">-${totalClassTru}</td>
+            <td class="center bold">${classAvg}</td>
+            <td class="center">Đạt chuẩn</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="section-title">II. BẢNG ĐIỂM CHI TIẾT 41 HỌC SINH LỚP 9A1</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 6%;">STT</th>
+            <th style="width: 26%;">Họ và tên</th>
+            <th style="width: 10%;">Tổ</th>
+            <th style="width: 16%;">Chức vụ</th>
+            <th style="width: 10%;">Điểm cộng</th>
+            <th style="width: 10%;">Điểm trừ</th>
+            <th style="width: 11%;">Tổng điểm</th>
+            <th style="width: 11%;">Xếp loại</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${studentScores.map((item) => `
+            <tr>
+              <td class="center">${item.stt}</td>
+              <td class="bold">${item.student.name}</td>
+              <td class="center">Tổ ${item.student.teamId}</td>
+              <td class="center">${item.student.roleTitle || 'Thành viên'}</td>
+              <td class="center" style="color: #047857; font-weight: bold;">${item.cong > 0 ? `+${item.cong}` : '0'}</td>
+              <td class="center" style="color: #be123c; font-weight: bold;">${item.tru > 0 ? `-${item.tru}` : '0'}</td>
+              <td class="center bold" style="background-color: #f8fafc;">${item.total}</td>
+              <td class="center bold">${item.rankTitle}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
 
-      <div class="section-title">II. GƯƠNG SÁNG BIỂU DƯƠNG TRONG TUẦN</div>
+      <div class="section-title">III. THỐNG KÊ NỀ NẾP THEO CHUYÊN MỤC</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">STT</th>
+            <th style="width: 32%;">Chuyên mục</th>
+            <th style="width: 15%;">Số lượt cộng (+)</th>
+            <th style="width: 15%;">Số lượt vi phạm (-)</th>
+            <th style="width: 15%;">Điểm chênh lệch</th>
+            <th style="width: 15%;">Đánh giá chung</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${categoryStats.map(c => `
+            <tr>
+              <td class="center">${c.stt}</td>
+              <td class="bold">${c.name}</td>
+              <td class="center" style="color: #047857; font-weight: bold;">${c.congCount}</td>
+              <td class="center" style="color: #be123c; font-weight: bold;">${c.truCount}</td>
+              <td class="center bold">${c.netPoints > 0 ? `+${c.netPoints}` : c.netPoints}</td>
+              <td class="center">${c.rate}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="section-title">IV. GƯƠNG SÁNG BIỂU DƯƠNG TRONG TUẦN</div>
       ${commended.length > 0 ? `
         <table class="data-table">
           <thead>
@@ -496,8 +628,8 @@ export function exportToWordDoc(
               <th style="width: 8%;">STT</th>
               <th style="width: 25%;">Họ và tên</th>
               <th style="width: 15%;">Tổ</th>
-              <th style="width: 35%;">Nội dung biểu dương</th>
-              <th style="width: 17%;">Điểm cộng</th>
+              <th style="width: 37%;">Nội dung biểu dương</th>
+              <th style="width: 15%;">Điểm thưởng</th>
             </tr>
           </thead>
           <tbody>
@@ -507,14 +639,14 @@ export function exportToWordDoc(
                 <td class="bold">${c.studentName}</td>
                 <td class="center">Tổ ${c.teamId}</td>
                 <td>${c.title} ${c.notes ? `(${c.notes})` : ''}</td>
-                <td class="center bold" style="color: #0d8050;">+${c.points}</td>
+                <td class="center bold" style="color: #047857;">+${c.points}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-      ` : '<p style="font-style: italic;">Chưa có ghi nhận biểu dương trong tuần.</p>'}
+      ` : '<p style="font-style: italic; font-size: 11pt;">Chưa có ghi nhận biểu dương mới trong tuần.</p>'}
 
-      <div class="section-title">III. HỌC SINH CẦN LƯU Ý ĐÔN ĐỐC, NHẮC NHỞ</div>
+      <div class="section-title">V. HỌC SINH CẦN LƯU Ý ĐÔN ĐỐC, NHẮC NHỞ</div>
       ${warned.length > 0 ? `
         <table class="data-table">
           <thead>
@@ -522,8 +654,8 @@ export function exportToWordDoc(
               <th style="width: 8%;">STT</th>
               <th style="width: 25%;">Họ và tên</th>
               <th style="width: 15%;">Tổ</th>
-              <th style="width: 35%;">Lỗi vi phạm</th>
-              <th style="width: 17%;">Điểm trừ</th>
+              <th style="width: 37%;">Lỗi vi phạm</th>
+              <th style="width: 15%;">Điểm trừ</th>
             </tr>
           </thead>
           <tbody>
@@ -533,28 +665,30 @@ export function exportToWordDoc(
                 <td class="bold">${w.studentName}</td>
                 <td class="center">Tổ ${w.teamId}</td>
                 <td>${w.title} ${w.notes ? `(${w.notes})` : ''}</td>
-                <td class="center bold" style="color: #c92a2a;">${w.points}</td>
+                <td class="center bold" style="color: #be123c;">${w.points}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-      ` : '<p style="font-style: italic;">Tuần qua cả lớp chấp hành tốt, không có trường hợp vi phạm nặng.</p>'}
+      ` : '<p style="font-style: italic; font-size: 11pt;">Tuần qua cả lớp chấp hành tốt, không có trường hợp vi phạm nặng.</p>'}
 
-      <div class="section-title">IV. NHẬN XÉT CỦA GIÁO VIÊN CHỦ NHIỆM</div>
-      <div style="border: 1px dashed #666; padding: 10px 14px; background-color: #fafafa; border-radius: 4px; margin-bottom: 20px;">
-        ${teacherNotes}
+      <div class="section-title">VI. NHẬN XÉT CỦA GIÁO VIÊN CHỦ NHIỆM</div>
+      <div style="border: 1px dashed #666; padding: 12px 14px; background-color: #fafafa; border-radius: 4px; margin-bottom: 20px; font-style: italic; font-size: 11.5pt;">
+        "${teacherNotes}"
       </div>
 
       <table class="signature-table">
         <tr>
           <td>
             <div class="bold">LỚP TRƯỞNG</div>
-            <div style="margin-top: 60px; font-weight: bold;">${classMonitorName}</div>
+            <div style="font-size: 10pt; font-style: italic; color: #555;">(Ký và ghi rõ họ tên)</div>
+            <div style="margin-top: 65px; font-weight: bold; font-size: 12pt;">${classMonitorName}</div>
           </td>
           <td>
             <div><em>Vân Hà, ngày ${new Date().getDate()} tháng ${new Date().getMonth() + 1} năm ${new Date().getFullYear()}</em></div>
             <div class="bold">GIÁO VIÊN CHỦ NHIỆM</div>
-            <div style="margin-top: 50px; font-weight: bold;">${config.teacherName}</div>
+            <div style="font-size: 10pt; font-style: italic; color: #555;">(Ký và ghi rõ họ tên)</div>
+            <div style="margin-top: 55px; font-weight: bold; font-size: 12pt;">${config.teacherName}</div>
           </td>
         </tr>
       </table>

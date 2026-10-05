@@ -490,22 +490,22 @@ export const CompetitionView: React.FC = () => {
           {/* Simple Clean Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse border border-slate-200">
                 <thead>
-                  <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider sticky top-0 bg-slate-100/95 backdrop-blur-xs z-10">
-                    <th className="py-3 px-3 text-center w-14">Hạng</th>
-                    <th className="py-3 px-2 text-center w-12">STT</th>
-                    <th className="py-3 px-3">Họ và tên</th>
-                    <th className="py-3 px-3 text-center">Tổ</th>
-                    <th className="py-3 px-3 text-center hidden md:table-cell text-slate-500">Gốc</th>
-                    <th className="py-3 px-3 text-center text-emerald-700 font-black">Cộng (+)</th>
-                    <th className="py-3 px-3 text-center text-rose-700 font-black">Trừ (-)</th>
-                    <th className="py-3 px-3 text-center font-black text-slate-900 bg-slate-100/70">Tổng điểm</th>
-                    <th className="py-3 px-3 text-center">Xếp loại</th>
-                    <th className="py-3 px-3 text-center">Chi tiết & Nhập</th>
+                  <tr className="bg-slate-100/90 text-slate-700 font-bold text-xs uppercase tracking-wider sticky top-0 backdrop-blur-xs z-10">
+                    <th className="py-3 px-3 text-center w-14 border border-slate-200">Hạng</th>
+                    <th className="py-3 px-2 text-center w-12 border border-slate-200">STT</th>
+                    <th className="py-3 px-3 border border-slate-200">Họ và tên</th>
+                    <th className="py-3 px-3 text-center w-16 border border-slate-200">Tổ</th>
+                    <th className="py-3 px-3 text-center hidden md:table-cell text-slate-500 w-16 border border-slate-200">Gốc</th>
+                    <th className="py-3 px-3 text-center text-emerald-800 font-black w-20 border border-slate-200">Cộng (+)</th>
+                    <th className="py-3 px-3 text-center text-rose-800 font-black w-20 border border-slate-200">Trừ (-)</th>
+                    <th className="py-3 px-3 text-center font-black text-slate-900 bg-slate-200/70 w-24 border border-slate-200">Tổng điểm</th>
+                    <th className="py-3 px-3 text-center w-24 border border-slate-200">Xếp loại</th>
+                    <th className="py-3 px-3 text-center w-28 border border-slate-200">Chi tiết & Nhập</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody>
                   {rankedStudentScores.map((item) => {
                     const isTopRank = item.rank <= 3;
                     const rankMedal = item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank;
@@ -520,11 +520,11 @@ export const CompetitionView: React.FC = () => {
                       <tr 
                         key={item.student.id} 
                         className={`hover:bg-indigo-50/40 transition-colors ${
-                          item.rank === 1 ? 'bg-amber-50/30' : isTopRank ? 'bg-slate-50/60' : 'even:bg-slate-50/30'
+                          item.rank === 1 ? 'bg-amber-50/40' : isTopRank ? 'bg-slate-50/70' : 'even:bg-slate-50/30'
                         }`}
                       >
                         {/* Hạng (Hỗ trợ đồng hạng chuẩn sư phạm) */}
-                        <td className="py-2.5 px-3 text-center font-black text-sm">
+                        <td className="py-2.5 px-3 text-center font-black text-sm border border-slate-200/80">
                           {sortBy === 'points' ? (
                             isTopRank ? (
                               <div className="flex flex-col items-center justify-center">
@@ -556,12 +556,12 @@ export const CompetitionView: React.FC = () => {
                         </td>
 
                         {/* STT */}
-                        <td className="py-2.5 px-2 text-center font-bold text-slate-400 text-xs">
+                        <td className="py-2.5 px-2 text-center font-bold text-slate-500 text-xs border border-slate-200/80">
                           {item.student.stt}
                         </td>
 
                         {/* Họ và tên */}
-                        <td className="py-2.5 px-3">
+                        <td className="py-2.5 px-3 border border-slate-200/80">
                           <button
                             type="button"
                             onClick={() => setViewingStudentId(item.student.id)}
@@ -577,7 +577,7 @@ export const CompetitionView: React.FC = () => {
                         </td>
 
                         {/* Tổ */}
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-2.5 px-3 text-center border border-slate-200/80">
                           {item.student.teamId > 0 ? (
                             <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                               item.student.teamId === 1 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60' :
@@ -593,22 +593,22 @@ export const CompetitionView: React.FC = () => {
                         </td>
 
                         {/* Điểm gốc */}
-                        <td className="py-2.5 px-3 text-center hidden md:table-cell text-slate-400 text-xs font-mono">
+                        <td className="py-2.5 px-3 text-center hidden md:table-cell text-slate-500 text-xs font-mono border border-slate-200/80">
                           {data.config.basePoints}
                         </td>
 
                         {/* Điểm cộng */}
-                        <td className="py-2.5 px-3 text-center font-bold text-emerald-600 font-mono text-sm">
-                          {item.totalCong > 0 ? `+${item.totalCong}` : <span className="text-slate-300 font-normal">-</span>}
+                        <td className="py-2.5 px-3 text-center font-bold text-emerald-700 font-mono text-sm border border-slate-200/80">
+                          {item.totalCong > 0 ? `+${item.totalCong}` : <span className="text-slate-300 font-normal">0</span>}
                         </td>
 
                         {/* Điểm trừ */}
-                        <td className="py-2.5 px-3 text-center font-bold text-rose-600 font-mono text-sm">
+                        <td className="py-2.5 px-3 text-center font-bold text-rose-700 font-mono text-sm border border-slate-200/80">
                           {item.totalTru > 0 ? `-${item.totalTru}` : <span className="text-slate-300 font-normal">0</span>}
                         </td>
 
                         {/* Tổng điểm */}
-                        <td className="py-2.5 px-3 text-center bg-slate-100/40">
+                        <td className="py-2.5 px-3 text-center bg-slate-100/50 border border-slate-200/80">
                           <span className={`font-black text-base font-mono px-2 py-0.5 rounded-lg ${
                             item.currentPoints >= 100 
                               ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/50' 
@@ -621,14 +621,14 @@ export const CompetitionView: React.FC = () => {
                         </td>
 
                         {/* Xếp loại */}
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-2.5 px-3 text-center border border-slate-200/80">
                           <span className={`text-[11px] px-2 py-0.5 rounded-full border inline-block ${rankBadge}`}>
                             {item.rankTitle}
                           </span>
                         </td>
 
                         {/* Thao tác */}
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-2.5 px-3 text-center border border-slate-200/80">
                           <button
                             type="button"
                             onClick={() => {

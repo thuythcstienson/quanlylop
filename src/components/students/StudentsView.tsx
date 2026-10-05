@@ -619,11 +619,11 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
+            <table className="w-full text-left text-xs sm:text-sm border-collapse border border-slate-200">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                <tr className="bg-slate-100 text-slate-700 font-bold">
                   {currentUser.role === 'admin' && (
-                    <th className="py-3 px-3 text-center w-10">
+                    <th className="py-3 px-3 text-center w-10 border border-slate-200">
                       <input
                         type="checkbox"
                         checked={selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0}
@@ -632,16 +632,16 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                       />
                     </th>
                   )}
-                  <th className="py-3 px-3 text-center w-12">STT</th>
-                  <th className="py-3 px-3">Họ và tên</th>
-                  <th className="py-3 px-3 text-center">Tổ</th>
-                  <th className="py-3 px-3">Chức vụ</th>
-                  <th className="py-3 px-3 text-center hidden md:table-cell">Giới tính</th>
-                  <th className="py-3 px-3 hidden lg:table-cell">Phụ huynh & SĐT</th>
-                  <th className="py-3 px-3 text-center">Thao tác</th>
+                  <th className="py-3 px-3 text-center w-12 border border-slate-200">STT</th>
+                  <th className="py-3 px-3 border border-slate-200">Họ và tên</th>
+                  <th className="py-3 px-3 text-center w-16 border border-slate-200">Tổ</th>
+                  <th className="py-3 px-3 border border-slate-200">Chức vụ</th>
+                  <th className="py-3 px-3 text-center hidden md:table-cell w-20 border border-slate-200">Giới tính</th>
+                  <th className="py-3 px-3 hidden lg:table-cell border border-slate-200">Phụ huynh & SĐT</th>
+                  <th className="py-3 px-3 text-center w-28 border border-slate-200">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {filteredStudents.map((s, idx) => {
                   const isSelected = selectedStudentIds.includes(s.id);
 
@@ -649,11 +649,11 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                     <tr 
                       key={s.id} 
                       className={`hover:bg-slate-50/80 transition-colors ${
-                        isSelected ? 'bg-indigo-50/50' : ''
+                        isSelected ? 'bg-indigo-50/50' : 'even:bg-slate-50/30'
                       }`}
                     >
                       {currentUser.role === 'admin' && (
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-2.5 px-3 text-center border border-slate-200/80">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -663,9 +663,9 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                         </td>
                       )}
 
-                      <td className="py-2.5 px-3 text-center font-bold text-slate-500">{s.stt || idx + 1}</td>
+                      <td className="py-2.5 px-3 text-center font-bold text-slate-500 border border-slate-200/80">{s.stt || idx + 1}</td>
                       
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-3 border border-slate-200/80">
                         <div className="font-bold text-slate-900">{s.name}</div>
                         <div className="text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
                           <span>{s.birthDate ? s.birthDate : 'Chưa có ngày sinh'}</span>
@@ -684,9 +684,9 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                         </div>
                       </td>
 
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-2.5 px-3 text-center border border-slate-200/80">
                         {s.teamId && s.teamId > 0 ? (
-                          <span className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-xs">
+                          <span className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-xs border border-indigo-200/60">
                             Tổ {s.teamId}
                           </span>
                         ) : (
@@ -696,7 +696,7 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                         )}
                       </td>
 
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-3 border border-slate-200/80">
                         {currentUser.role === 'admin' ? (
                           <div className="flex items-center gap-1.5">
                             <select
@@ -769,18 +769,18 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                         )}
                       </td>
 
-                      <td className="py-2.5 px-3 text-center hidden md:table-cell text-slate-600">
+                      <td className="py-2.5 px-3 text-center hidden md:table-cell text-slate-600 border border-slate-200/80">
                         {s.gender}
                       </td>
 
-                      <td className="py-2.5 px-3 hidden lg:table-cell text-xs text-slate-600">
+                      <td className="py-2.5 px-3 hidden lg:table-cell text-xs text-slate-600 border border-slate-200/80">
                         <div>{s.parentName || 'Chưa cập nhật'}</div>
                         {s.parentPhone && (
                           <div className="text-slate-400 font-mono text-[11px]">{s.parentPhone}</div>
                         )}
                       </td>
 
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-2.5 px-3 text-center border border-slate-200/80">
                         <div className="flex items-center justify-center gap-1">
                           {currentUser.role === 'admin' ? (
                             <>
