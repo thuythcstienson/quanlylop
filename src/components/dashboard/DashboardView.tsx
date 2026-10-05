@@ -47,13 +47,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     showToast
   } = useApp();
 
+  const currentWeek = data.config.currentWeek || 5;
   const todayStats = getTodayStats();
-  const teamScores = getTeamLeaderboard();
-  const allStudentScores = getStudentLeaderboard();
+  const teamScores = getTeamLeaderboard(currentWeek);
+  const allStudentScores = getStudentLeaderboard(undefined, currentWeek);
   const pendingTransactions = getPendingTransactions();
 
   // Top 5 commended students with tie-awareness (đồng hạng khi bằng điểm nhau)
-  const topScoreVal = allStudentScores[0]?.currentPoints;
+  const topScoreVal = allStudentScores[0]?.currentPoints ?? 100;
   const topTiedCount = allStudentScores.filter(s => s.currentPoints === topScoreVal).length;
 
   const rankedTopStars = React.useMemo(() => {
@@ -720,7 +721,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </h3>
               <p className="text-xs text-slate-500">
                 {topTiedCount > 1 
-                  ? `Có ${topTiedCount} học sinh cùng dẫn đầu Hạng 1 (${topScoreVal}đ)`
+                  ? (topTiedCount >= allStudentScores.length 
+                      ? `Cả lớp cùng đạt ${topScoreVal}đ gốc (Đồng Hạng 1)` 
+                      : `Có ${topTiedCount} học sinh cùng dẫn đầu Hạng 1 (${topScoreVal}đ)`)
                   : 'Điểm thi đua cao nhất lớp'}
               </p>
             </div>

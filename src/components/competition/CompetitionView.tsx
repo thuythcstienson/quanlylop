@@ -43,6 +43,7 @@ export const CompetitionView: React.FC = () => {
     getTeamLeaderboard, 
     deleteTransaction, 
     addTransaction,
+    clearAllTransactions,
     addRule,
     openConfirm,
     showToast
@@ -50,11 +51,12 @@ export const CompetitionView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'individual' | 'teams'>('individual');
   // 0 means All Weeks, otherwise 1..35
-  const [selectedWeek, setSelectedWeek] = useState<number>(() => data.config.currentWeek || 4);
+  const [selectedWeek, setSelectedWeek] = useState<number>(() => data.config.currentWeek || 5);
   const [filterTeam, setFilterTeam] = useState<number | 'all'>('all');
   const [searchName, setSearchName] = useState('');
   const [sortBy, setSortBy] = useState<'points' | 'stt' | 'name' | 'violations'>('points');
   const [viewingStudentId, setViewingStudentId] = useState<string | null>(null);
+  const [isClearPointsModalOpen, setIsClearPointsModalOpen] = useState(false);
 
   // Inline Quick Scoring state inside Student Modal
   const [showInlineScoring, setShowInlineScoring] = useState(false);
@@ -70,7 +72,7 @@ export const CompetitionView: React.FC = () => {
   const [isSubmittingModalScore, setIsSubmittingModalScore] = useState(false);
 
   const weeksList = useMemo(() => getAcademicWeeksList(35), []);
-  const currentWeekNum = data.config.currentWeek || 4;
+  const currentWeekNum = data.config.currentWeek || 5;
   const currentRange = useMemo(() => {
     if (selectedWeek === 0) return { rangeLabel: 'Toàn bộ năm học (Tất cả các tuần)' };
     return getWeekDateRange(selectedWeek);
@@ -325,6 +327,19 @@ export const CompetitionView: React.FC = () => {
             <FileSpreadsheet className="w-4 h-4" />
             <span className="hidden sm:inline">Xuất Excel</span>
           </button>
+
+          {/* GVCN: Xóa toàn bộ điểm cộng/trừ */}
+          {currentUser.role === 'admin' && (
+            <button
+              type="button"
+              onClick={() => setIsClearPointsModalOpen(true)}
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              title="Xóa điểm cộng/trừ cho tuần hoặc toàn bộ"
+            >
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span className="hidden sm:inline">Xóa điểm cộng/trừ</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1036,6 +1051,113 @@ export const CompetitionView: React.FC = () => {
                 className="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-xs cursor-pointer"
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: XÓA TOÀN BỘ ĐIỂM CỘNG/TRỪ DÀNH CHO GVCN */}
+      {isClearPointsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">Xóa Điểm Cộng / Trừ Thi Đua</h3>
+                  <p className="text-xs text-slate-500">Chức năng quản trị dành riêng cho Giáo viên chủ nhiệm</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsClearPointsModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Bạn có thể xóa toàn bộ điểm cộng/trừ của tuần hiện tại để chấm lại, hoặc xóa trắng điểm của tất cả các tuần để bắt đầu chu kỳ tính điểm mới.
+            </p>
+
+            <div className="space-y-3">
+              {/* Option 1: Xóa điểm theo tuần đang chọn */}
+              <div className="p-4 rounded-2xl border-2 border-slate-200 hover:border-amber-300 bg-slate-50/70 hover:bg-amber-50/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-600" />
+                    <span>Xóa toàn bộ điểm Tuần {selectedWeek === 0 ? currentWeekNum : selectedWeek}</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Chỉ xóa các lượt chấm điểm trong Tuần {selectedWeek === 0 ? currentWeekNum : selectedWeek}. Các tuần khác giữ nguyên.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const targetW = selectedWeek === 0 ? currentWeekNum : selectedWeek;
+                    openConfirm({
+                      title: `Xác nhận xóa điểm Tuần ${targetW}?`,
+                      message: `Bạn có chắc muốn xóa TOÀN BỘ điểm cộng và trừ trong Tuần ${targetW}? Thao tác này không thể hoàn tác!`,
+                      confirmText: `Xóa điểm Tuần ${targetW}`,
+                      isDestructive: true,
+                      onConfirm: async () => {
+                        await clearAllTransactions(targetW);
+                        setIsClearPointsModalOpen(false);
+                      },
+                    });
+                  }}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
+                >
+                  Xóa Tuần {selectedWeek === 0 ? currentWeekNum : selectedWeek}
+                </button>
+              </div>
+
+              {/* Option 2: Xóa toàn bộ tất cả các tuần */}
+              <div className="p-4 rounded-2xl border-2 border-rose-200 hover:border-rose-400 bg-rose-50/40 hover:bg-rose-50/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="font-bold text-rose-950 text-sm flex items-center gap-2">
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Xóa sạch điểm TẤT CẢ các tuần</span>
+                  </div>
+                  <div className="text-xs text-rose-800/80 mt-0.5">
+                    Xóa sạch toàn bộ giao dịch. Toàn bộ học sinh về 100 điểm gốc ban đầu.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    openConfirm({
+                      title: 'XÓA SẠCH TOÀN BỘ ĐIỂM TẤT CẢ CÁC TUẦN?',
+                      message: 'Bạn có chắc chắn muốn xóa TOÀN BỘ điểm cộng và trừ của TẤT CẢ các tuần trong năm học? Tất cả học sinh sẽ trở về 100 điểm ban đầu. Thao tác này KHÔNG thể hoàn tác!',
+                      confirmText: 'Xóa sạch tất cả các tuần',
+                      isDestructive: true,
+                      onConfirm: async () => {
+                        await clearAllTransactions('all');
+                        setIsClearPointsModalOpen(false);
+                      },
+                    });
+                  }}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
+                >
+                  Xóa toàn bộ
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsClearPointsModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              >
+                Hủy bỏ
               </button>
             </div>
           </div>

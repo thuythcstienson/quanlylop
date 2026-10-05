@@ -637,21 +637,13 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
                   <th className="py-3 px-3 text-center">Tổ</th>
                   <th className="py-3 px-3">Chức vụ</th>
                   <th className="py-3 px-3 text-center hidden md:table-cell">Giới tính</th>
-                  <th className="py-3 px-3 text-center font-black">Điểm thi đua</th>
-                  <th className="py-3 px-3 text-center">Xếp loại</th>
                   <th className="py-3 px-3 hidden lg:table-cell">Phụ huynh & SĐT</th>
                   <th className="py-3 px-3 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredStudents.map((s, idx) => {
-                  const score = getStudentScore(s.id);
                   const isSelected = selectedStudentIds.includes(s.id);
-
-                  let rankBadge = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                  if (score.rankTitle === 'Tốt') rankBadge = 'bg-blue-50 text-blue-800 border-blue-200';
-                  else if (score.rankTitle === 'Khá') rankBadge = 'bg-slate-50 text-slate-700 border-slate-200';
-                  else if (score.rankTitle === 'Cần cố gắng') rankBadge = 'bg-rose-50 text-rose-800 border-rose-200';
 
                   return (
                     <tr 
@@ -779,16 +771,6 @@ export const StudentsView: React.FC<StudentsViewProps> = ({ onOpenExcelImport })
 
                       <td className="py-2.5 px-3 text-center hidden md:table-cell text-slate-600">
                         {s.gender}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-center font-black text-slate-900 text-base">
-                        {score.currentPoints}
-                      </td>
-
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${rankBadge}`}>
-                          {score.rankTitle}
-                        </span>
                       </td>
 
                       <td className="py-2.5 px-3 hidden lg:table-cell text-xs text-slate-600">

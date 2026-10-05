@@ -125,6 +125,8 @@ interface AppContextType {
 
   addAccount: (acc: Omit<UserAccount, 'id' | 'createdAt' | 'isLocked'>) => Promise<void>;
   toggleLockAccount: (id: string) => Promise<void>;
+  deleteAccount: (id: string) => Promise<boolean>;
+  deleteDemoAccounts: () => Promise<number>;
 
   updateConfig: (newConfig: Partial<ClassConfig>) => Promise<void>;
   addAnnouncement: (ann: Omit<Announcement, 'id' | 'createdAt' | 'createdBy'>) => Promise<void>;
@@ -141,8 +143,9 @@ interface AppContextType {
   rollbackCampaignPoints: (campaignId: string) => Promise<boolean>;
   deleteCampaign: (id: string) => Promise<boolean>;
 
-  // Clear Competition Period (Xóa thi đua theo Tuần / Tháng)
+  // Clear Competition Period (Xóa thi đua theo Tuần / Tháng / Toàn bộ)
   clearPeriodTransactions: (type: 'week' | 'month', value: number) => Promise<number>;
+  clearAllTransactions: (weekNumber?: number | 'all') => Promise<number>;
 
   // Student Evaluations & Comments (Nhận xét học sinh)
   addEvaluation: (evaluation: Omit<StudentEvaluation, 'id' | 'createdAt' | 'authorId' | 'authorName' | 'authorRole'>) => Promise<void>;
@@ -1079,6 +1082,64 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Đã thay đổi trạng thái tài khoản.', 'info');
   };
 
+  const deleteAccount = async (id: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/accounts/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        setData(prev => ({
+          ...prev,
+          accounts: prev.accounts.filter(a => a.id !== id),
+        }));
+        showToast('Đã xóa tài khoản thành công!', 'success');
+        return true;
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Không thể xóa tài khoản này.', 'error');
+        return false;
+      }
+    } catch (e) {
+      console.warn(e);
+      showToast('Lỗi khi xóa tài khoản.', 'error');
+      return false;
+    }
+  };
+
+  const deleteDemoAccounts = async (): Promise<number> => {
+    try {
+      const res = await fetch('/api/accounts/delete-demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminName: currentUser.displayName }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        const demoUsernames = new Set([
+          'loptruong', 'loppho_ht', 'loppho_nn', 'lop_pho_vtm', 'loppho_vtm',
+          'totruong1', 'totruong2', 'totruong3', 'totruong4',
+          'hocsinh', 'phuhuynh'
+        ]);
+        setData(prev => ({
+          ...prev,
+          accounts: prev.accounts.filter(a => {
+            if (a.role === 'admin' || a.username.toLowerCase() === 'admin') return true;
+            if (demoUsernames.has(a.username.toLowerCase()) || (a.id.startsWith('acc_') && a.id !== 'acc_admin')) return false;
+            return true;
+          }),
+        }));
+        showToast(result.message || `Đã xóa ${result.deletedCount || 0} tài khoản demo mẫu!`, 'success');
+        return result.deletedCount || 0;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+    showToast('Lỗi khi xóa tài khoản demo.', 'error');
+    return 0;
+  };
+
   // Config
   const updateConfig = async (newConfig: Partial<ClassConfig>) => {
     try {
@@ -1571,6 +1632,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return deletedCount;
   };
 
+  // Xóa toàn bộ điểm cộng/trừ (tuần cụ thể hoặc toàn bộ các tuần)
+  const clearAllTransactions = async (weekNumber?: number | 'all'): Promise<number> => {
+    let deletedCount = 0;
+    try {
+      const res = await fetch('/api/transactions/clear-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminName: currentUser.displayName,
+          weekNumber: weekNumber !== undefined ? weekNumber : 'all'
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        deletedCount = result.deletedCount || 0;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    const initialLen = data.transactions.length;
+    let newTransactions = data.transactions;
+    if (weekNumber !== undefined && weekNumber !== 'all') {
+      const w = Number(weekNumber);
+      newTransactions = data.transactions.filter(t => t.weekNumber !== w);
+    } else {
+      newTransactions = [];
+    }
+    deletedCount = initialLen - newTransactions.length;
+
+    setData(prev => ({
+      ...prev,
+      transactions: newTransactions,
+    }));
+
+    showToast(
+      weekNumber !== undefined && weekNumber !== 'all'
+        ? `Đã xóa toàn bộ điểm cộng/trừ Tuần ${weekNumber} (${deletedCount} lượt).`
+        : `Đã xóa sạch toàn bộ điểm cộng/trừ (${deletedCount} lượt). Tất cả học sinh về điểm gốc 100đ!`,
+      'success'
+    );
+    return deletedCount;
+  };
+
   // Student Evaluations & Comments (Nhận xét học sinh)
   const addEvaluation = async (evalData: Omit<StudentEvaluation, 'id' | 'createdAt' | 'authorId' | 'authorName' | 'authorRole'>) => {
     const newEval: StudentEvaluation = {
@@ -1902,6 +2007,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteRule,
         addAccount,
         toggleLockAccount,
+        deleteAccount,
+        deleteDemoAccounts,
         updateConfig,
         addAnnouncement,
         deleteAnnouncement,
@@ -1915,6 +2022,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         rollbackCampaignPoints,
         deleteCampaign,
         clearPeriodTransactions,
+        clearAllTransactions,
         addEvaluation,
         updateEvaluation,
         deleteEvaluation,

@@ -12,7 +12,7 @@
     "requireApproval": false,
     "allowStudentViewRank": true,
     "allowParentViewRank": true,
-    "currentWeek": 4,
+    "currentWeek": 5,
     "currentMonth": 10,
     "startDate": "2026-09-07",
     "rolePermissions": {

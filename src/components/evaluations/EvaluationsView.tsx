@@ -67,7 +67,7 @@ export const EvaluationsView: React.FC = () => {
 
   // Period Filter States
   const [periodType, setPeriodType] = useState<EvaluationPeriodType>('tuan');
-  const [selectedWeek, setSelectedWeek] = useState<number>(data.config.currentWeek || 4);
+  const [selectedWeek, setSelectedWeek] = useState<number>(data.config.currentWeek || 5);
   const [selectedMonth, setSelectedMonth] = useState<number>(data.config.currentMonth || 10);
   const [selectedSemester, setSelectedSemester] = useState<string>('HK1');
 

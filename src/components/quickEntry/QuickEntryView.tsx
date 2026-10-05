@@ -65,7 +65,7 @@ export const QuickEntryView: React.FC = () => {
   const [recentEntries, setRecentEntries] = useState<Array<{ name: string; title: string; points: number; time: string; day?: string }>>([]);
 
   const weeksList = useMemo(() => getAcademicWeeksList(35), []);
-  const currentWeekNum = data.config.currentWeek || 4;
+  const currentWeekNum = data.config.currentWeek || 5;
   const currentWeekRange = useMemo(() => getWeekDateRange(selectedWeek), [selectedWeek]);
   const weekDayOptions = useMemo(() => getDaysOfWeekForAcademicWeek(selectedWeek), [selectedWeek]);
 

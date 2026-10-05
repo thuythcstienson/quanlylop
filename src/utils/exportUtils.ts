@@ -372,11 +372,13 @@ export function exportToWordDoc(
     weekNumber?: number;
     month?: number;
     teacherNotes?: string;
+    classMonitor?: string;
   }
 ) {
   const { config, students, transactions } = appData;
   const weekNumber = options.weekNumber || config.currentWeek;
   const teacherNotes = options.teacherNotes || 'Đa số các em chấp hành tốt nội quy nề nếp, chuẩn bị bài đầy đủ. Các tổ trưởng đã phát huy tốt tinh thần trách nhiệm. Cần tăng cường đôn đốc các bạn hay đi muộn và quên sách vở.';
+  const classMonitorName = options.classMonitor || (students?.find(s => s.roleTitle?.toLowerCase().includes('lớp trưởng'))?.name) || 'Tạ Thục Quyên';
 
   // Calculate scores
   const studentScores = students.map((s, idx) => {
@@ -443,7 +445,7 @@ export function exportToWordDoc(
       <table class="header-table">
         <tr>
           <td class="center" style="width: 45%;">
-            <div>PHÒNG GD&ĐT HUYỆN VIỆT YÊN</div>
+            <div>UBND PHƯỜNG VÂN HÀ</div>
             <div class="bold">TRƯỜNG THCS VÂN HÀ 2</div>
             <div style="width: 120px; border-bottom: 1px solid #000; margin: 4px auto;"></div>
           </td>
@@ -547,7 +549,7 @@ export function exportToWordDoc(
         <tr>
           <td>
             <div class="bold">LỚP TRƯỞNG</div>
-            <div style="margin-top: 60px; font-weight: bold;">Nguyễn Đức Minh</div>
+            <div style="margin-top: 60px; font-weight: bold;">${classMonitorName}</div>
           </td>
           <td>
             <div><em>Vân Hà, ngày ${new Date().getDate()} tháng ${new Date().getMonth() + 1} năm ${new Date().getFullYear()}</em></div>

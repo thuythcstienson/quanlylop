@@ -2,7 +2,7 @@ import { AppData, PointRule, Student, UserAccount, PointTransaction, Announcemen
 
 export const INITIAL_STUDENTS: Student[] = [
   // TỔ 1 (10 HS)
-  { id: 'hs_01', stt: 1, name: 'Nguyễn Đức Minh', gender: 'Nam', birthDate: '2011-04-12', birthPlace: 'Việt Yên, Bắc Giang', permanentAddress: 'Thôn Vân Cốc 1, Xã Vân Hà, Thị xã Việt Yên, Tỉnh Bắc Giang', teamId: 1, roleTitle: 'Lớp trưởng', parentName: 'Nguyễn Đức Hùng', parentPhone: '0912345601', notes: 'Gương mẫu, học giỏi toàn diện' },
+  { id: 'hs_01', stt: 1, name: 'Tạ Thục Quyên', gender: 'Nữ', birthDate: '2011-04-12', birthPlace: 'Việt Yên, Bắc Giang', permanentAddress: 'Thôn Vân Cốc 1, Xã Vân Hà, Thị xã Việt Yên, Tỉnh Bắc Giang', teamId: 1, roleTitle: 'Lớp trưởng', parentName: 'Tạ Văn Quyết', parentPhone: '0912345601', notes: 'Gương mẫu, học giỏi toàn diện, được GVCN bổ nhiệm Lớp trưởng' },
   { id: 'hs_02', stt: 2, name: 'Vũ Quốc Bảo', gender: 'Nam', birthDate: '2011-08-20', birthPlace: 'Việt Yên, Bắc Giang', permanentAddress: 'Thôn Yên Viên, Xã Vân Hà, Thị xã Việt Yên, Tỉnh Bắc Giang', teamId: 1, roleTitle: 'Tổ trưởng', parentName: 'Vũ Văn Kiên', parentPhone: '0912345602', notes: 'Năng nổ, trách nhiệm cao' },
   { id: 'hs_03', stt: 3, name: 'Hoàng Lan Anh', gender: 'Nữ', birthDate: '2011-02-15', birthPlace: 'Bắc Giang', permanentAddress: 'Thôn Thổ Hà, Xã Vân Hà, Thị xã Việt Yên, Tỉnh Bắc Giang', teamId: 1, roleTitle: 'Tổ phó', parentName: 'Hoàng Văn Thắng', parentPhone: '0912345603' },
   { id: 'hs_04', stt: 4, name: 'Nguyễn Văn An', gender: 'Nam', birthDate: '2011-05-18', birthPlace: 'Việt Yên, Bắc Giang', permanentAddress: 'Thôn Vân Cốc 2, Xã Vân Hà, Thị xã Việt Yên, Tỉnh Bắc Giang', teamId: 1, roleTitle: 'Thành viên', parentName: 'Nguyễn Văn Bình', parentPhone: '0912345604' },
@@ -82,7 +82,7 @@ export const INITIAL_RULES: PointRule[] = [
 
 export const INITIAL_ACCOUNTS: UserAccount[] = [
   { id: 'acc_admin', username: 'admin', passwordHash: 'admin123', displayName: 'Thầy Nguyễn Văn Thủy (GVCN)', role: 'admin', isLocked: false, createdAt: '2026-09-01T07:00:00Z' },
-  { id: 'acc_loptruong', username: 'loptruong', passwordHash: '123456', displayName: 'Nguyễn Đức Minh (Lớp trưởng)', role: 'lop_truong', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_01', teamId: 1 },
+  { id: 'acc_loptruong', username: 'loptruong', passwordHash: '123456', displayName: 'Tạ Thục Quyên (Lớp trưởng)', role: 'lop_truong', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_01', teamId: 1 },
   { id: 'acc_loppho_ht', username: 'loppho_ht', passwordHash: '123456', displayName: 'Trần Thị Mai Phương (LP Học tập)', role: 'lop_pho_ht', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_11', teamId: 2 },
   { id: 'acc_loppho_nn', username: 'loppho_nn', passwordHash: '123456', displayName: 'Lê Hoàng Nam (LP Nề nếp)', role: 'lop_pho_nn', isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_21', teamId: 3 },
   { id: 'acc_totruong1', username: 'totruong1', passwordHash: '123456', displayName: 'Vũ Quốc Bảo (Tổ trưởng 1)', role: 'to_truong', teamId: 1, isLocked: false, createdAt: '2026-09-01T07:00:00Z', studentId: 'hs_02' },
@@ -147,7 +147,7 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   {
     id: 'log_03',
     userId: 'acc_loptruong',
-    userName: 'Nguyễn Đức Minh',
+    userName: 'Tạ Thục Quyên',
     role: 'lop_truong',
     action: 'Cộng điểm',
     details: 'Cộng 2 điểm HS Nguyễn Trà My do tích cực trực nhật',
@@ -342,7 +342,7 @@ export const INITIAL_APP_DATA: AppData = {
     requireApproval: false, // Mặc định lưu ngay, có thể chuyển sang kiểm duyệt
     allowStudentViewRank: true,
     allowParentViewRank: true,
-    currentWeek: 4,
+    currentWeek: 5,
     currentMonth: 10,
     schoolRank: 1, // Thứ tự của lớp trong toàn trường
     schoolTotalClasses: 24, // Tổng số lớp toàn trường

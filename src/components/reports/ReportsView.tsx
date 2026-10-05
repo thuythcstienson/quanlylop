@@ -53,9 +53,11 @@ export const ReportsView: React.FC = () => {
   };
 
   const handleExportWord = () => {
+    const classMonitor = data.students.find(s => s.roleTitle?.toLowerCase().includes('lớp trưởng'))?.name || 'Tạ Thục Quyên';
     exportToWordDoc(data, {
       weekNumber: selectedWeek,
       teacherNotes,
+      classMonitor,
     });
     showToast(`Đã xuất file Word Báo cáo thi đua Tuần ${selectedWeek}!`, 'success');
   };
@@ -182,7 +184,7 @@ export const ReportsView: React.FC = () => {
         {/* Document Letterhead */}
         <div className="flex flex-col sm:flex-row justify-between text-center sm:text-left gap-4 pb-4 border-b border-slate-200">
           <div>
-            <div className="text-xs font-semibold uppercase text-slate-500">Phòng GD&ĐT Huyện Việt Yên</div>
+            <div className="text-xs font-semibold uppercase text-slate-500">UBND phường Vân Hà</div>
             <div className="text-sm font-black uppercase tracking-tight text-slate-900">Trường THCS Vân Hà 2</div>
             <div className="text-xs text-slate-600">Lớp 9A1 • Năm học {data.config.schoolYear}</div>
           </div>
@@ -332,7 +334,9 @@ export const ReportsView: React.FC = () => {
           <div>
             <div className="font-bold uppercase text-slate-900">LỚP TRƯỞNG</div>
             <div className="text-[11px] text-slate-400 mt-1">(Ký và ghi rõ họ tên)</div>
-            <div className="mt-14 font-black text-slate-900 text-sm">Nguyễn Đức Minh</div>
+            <div className="mt-14 font-black text-slate-900 text-sm">
+              {data.students.find(s => s.roleTitle?.toLowerCase().includes('lớp trưởng'))?.name || 'Tạ Thục Quyên'}
+            </div>
           </div>
 
           <div>

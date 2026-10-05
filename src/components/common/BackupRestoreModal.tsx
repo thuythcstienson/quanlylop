@@ -77,7 +77,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
   const handleCreateSnapshot = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
-    const note = snapshotNote.trim() || `Tuần_${data.config.currentWeek || 4}_${data.students.length}HS`;
+    const note = snapshotNote.trim() || `Tuần_${data.config.currentWeek || 5}_${data.students.length}HS`;
     const ok = await createSnapshot(note);
     setIsCreating(false);
     if (ok) {
@@ -93,7 +93,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
     const a = document.createElement('a');
     a.href = url;
     const dateStr = new Date().toISOString().slice(0, 10);
-    a.download = `SaoLuu_Lop9A1_THCSVanHa2_${dateStr}_Tuan${data.config.currentWeek || 4}.json`;
+    a.download = `SaoLuu_Lop9A1_THCSVanHa2_${dateStr}_Tuan${data.config.currentWeek || 5}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

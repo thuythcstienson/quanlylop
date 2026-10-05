@@ -33,6 +33,8 @@ export const SettingsView: React.FC = () => {
     updateRule,
     deleteRule, 
     clearPeriodTransactions,
+    clearAllTransactions,
+    deleteDemoAccounts,
     restoreBackup, 
     resetDemoData, 
     openConfirm, 
@@ -675,7 +677,7 @@ export const SettingsView: React.FC = () => {
             Dữ liệu lớp 9A1 được lưu bền vững trên máy chủ. Bạn có thể tải bản sao lưu về máy tính hoặc khôi phục bất cứ lúc nào.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
             {/* Open Full Snapshot Manager Modal */}
             <button
               onClick={() => setIsBackupModalOpen(true)}
@@ -684,7 +686,7 @@ export const SettingsView: React.FC = () => {
               <div>
                 <Database className="w-5 h-5 text-indigo-600 mb-1.5 group-hover:scale-110 transition-transform" />
                 <div className="font-bold text-slate-800 text-xs sm:text-sm">Quản Lý Sao Lưu</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Tạo điểm khôi phục & xem các bản lưu trữ</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Tạo điểm khôi phục & xem các bản lưu</div>
               </div>
             </button>
 
@@ -696,7 +698,7 @@ export const SettingsView: React.FC = () => {
               <div>
                 <Download className="w-5 h-5 text-indigo-600 mb-1.5" />
                 <div className="font-bold text-slate-800 text-xs sm:text-sm">Tải File .JSON</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Xuất toàn bộ học sinh & điểm số về máy</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Xuất toàn bộ học sinh & điểm số</div>
               </div>
             </button>
 
@@ -715,9 +717,49 @@ export const SettingsView: React.FC = () => {
               <div>
                 <Upload className="w-5 h-5 text-emerald-600 mb-1.5" />
                 <div className="font-bold text-slate-800 text-xs sm:text-sm">Nạp File .JSON</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Khôi phục từ file sao lưu trên máy tính</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Khôi phục từ file sao lưu trên máy</div>
               </div>
             </div>
+
+            {/* Xóa Toàn Bộ Điểm Cộng / Trừ */}
+            <button
+              onClick={() => {
+                openConfirm({
+                  title: 'XÓA SẠCH TOÀN BỘ ĐIỂM THI ĐUA?',
+                  message: `Bạn có chắc chắn muốn xóa TOÀN BỘ điểm cộng và điểm trừ của TẤT CẢ các tuần? Tất cả học sinh sẽ trở về điểm gốc ${data.config.basePoints} điểm. Danh sách học sinh và tài khoản sẽ được giữ nguyên. Thao tác này không thể hoàn tác!`,
+                  confirmText: 'Xóa sạch toàn bộ điểm',
+                  isDestructive: true,
+                  onConfirm: () => clearAllTransactions('all'),
+                });
+              }}
+              className="p-4 rounded-xl border border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50/40 text-left transition-all cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <Trash2 className="w-5 h-5 text-rose-600 mb-1.5" />
+                <div className="font-bold text-slate-800 text-xs sm:text-sm">Xóa Toàn Bộ Điểm</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Về lại 100đ gốc sạch sẽ</div>
+              </div>
+            </button>
+
+            {/* Xóa Tài Khoản Demo */}
+            <button
+              onClick={() => {
+                openConfirm({
+                  title: 'Xóa các tài khoản demo mẫu?',
+                  message: 'Hệ thống sẽ xóa tất cả các tài khoản demo mẫu (loptruong, loppho, totruong1..4, hocsinh, phuhuynh) và chỉ giữ lại tài khoản GVCN cùng các tài khoản do bạn tự tạo.',
+                  confirmText: 'Xóa tài khoản demo',
+                  isDestructive: true,
+                  onConfirm: deleteDemoAccounts,
+                });
+              }}
+              className="p-4 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50 hover:bg-amber-50/40 text-left transition-all cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <ShieldCheck className="w-5 h-5 text-amber-600 mb-1.5" />
+                <div className="font-bold text-slate-800 text-xs sm:text-sm">Xóa Tài Khoản Demo</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Dọn sạch các tài khoản phân quyền mẫu</div>
+              </div>
+            </button>
 
             {/* Reset Demo */}
             <button

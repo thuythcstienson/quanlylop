@@ -93,7 +93,26 @@ async function loadDatabaseAsync(): Promise<AppData> {
     loadedData.accessLogs = JSON.parse(JSON.stringify(INITIAL_APP_DATA.accessLogs || []));
   }
 
+  // Tự động tính đúng tuần học theo năm học (Thứ Hai 07/09/2026 = Tuần 1)
+  if (!loadedData.config) {
+    loadedData.config = JSON.parse(JSON.stringify(INITIAL_APP_DATA.config));
+  }
+  const autoWeek = calculateCurrentAcademicWeek();
+  if (!loadedData.config.currentWeek || loadedData.config.currentWeek < autoWeek) {
+    loadedData.config.currentWeek = autoWeek;
+  }
+
   return loadedData;
+}
+
+function calculateCurrentAcademicWeek(date: Date = new Date()): number {
+  const start = new Date(2026, 8, 7); // Thứ Hai 07/09/2026
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  start.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return 1;
+  return Math.min(35, Math.floor(diffDays / 7) + 1);
 }
 
 // 3. Hàm Save dữ liệu (Lưu song song db & file)
@@ -146,6 +165,11 @@ async function startServer() {
 
   // --- API ROUTES ---
   app.get('/api/data', (_req: Request, res: Response) => {
+    const liveWeek = calculateCurrentAcademicWeek();
+    if (dbData.config && (!dbData.config.currentWeek || dbData.config.currentWeek < liveWeek)) {
+      dbData.config.currentWeek = liveWeek;
+      saveDatabase(dbData);
+    }
     const safeData: AppData = {
       ...dbData,
       accounts: dbData.accounts.map(acc => ({
@@ -382,6 +406,26 @@ async function startServer() {
     }
     
     res.status(400).json({ error: 'Loại kỳ không hợp lệ (chỉ week hoặc month).' });
+  });
+
+  // Xóa toàn bộ điểm cộng/trừ (toàn bộ các tuần hoặc của tuần cụ thể)
+  app.post('/api/transactions/clear-all', (req: Request, res: Response) => {
+    const { adminName, weekNumber } = req.body || {};
+    const initialCount = dbData.transactions.length;
+    
+    if (weekNumber !== undefined && weekNumber !== null && weekNumber !== 'all') {
+      const w = Number(weekNumber);
+      dbData.transactions = dbData.transactions.filter(t => t.weekNumber !== w);
+      const deletedCount = initialCount - dbData.transactions.length;
+      saveDatabase(dbData);
+      addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa toàn bộ điểm tuần', `Đã xóa toàn bộ ${deletedCount} lượt điểm cộng/trừ của Tuần ${w}`);
+      return res.json({ success: true, deletedCount, message: `Đã xóa toàn bộ ${deletedCount} lượt điểm cộng/trừ của Tuần ${w}.` });
+    } else {
+      dbData.transactions = [];
+      saveDatabase(dbData);
+      addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa sạch toàn bộ điểm thi đua', `Đã xóa sạch toàn bộ ${initialCount} lượt điểm cộng/trừ của tất cả các tuần`);
+      return res.json({ success: true, deletedCount: initialCount, message: `Đã xóa sạch toàn bộ ${initialCount} lượt điểm cộng/trừ trong hệ thống.` });
+    }
   });
 
   app.post('/api/students', (req: Request, res: Response) => {
@@ -680,6 +724,39 @@ async function startServer() {
     saveDatabase(dbData);
     addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa tài khoản', `Xóa vĩnh viễn tài khoản: @${deleted.username} (${deleted.displayName})`);
     res.json({ success: true, deletedId: id });
+  });
+
+  // Xóa toàn bộ các tài khoản demo mẫu (chỉ giữ lại tài khoản admin và các tài khoản cán sự GVCN đã tự lập)
+  app.post('/api/accounts/delete-demo', (req: Request, res: Response) => {
+    const { adminName } = req.body || {};
+    const demoUsernames = new Set([
+      'loptruong', 'loppho_ht', 'loppho_nn', 'lop_pho_vtm', 'loppho_vtm',
+      'totruong1', 'totruong2', 'totruong3', 'totruong4',
+      'hocsinh', 'phuhuynh'
+    ]);
+
+    const initialCount = dbData.accounts.length;
+    const toDelete = dbData.accounts.filter(a => {
+      if (a.role === 'admin' || a.username.toLowerCase() === 'admin') return false;
+      return demoUsernames.has(a.username.toLowerCase()) || (a.id.startsWith('acc_') && a.id !== 'acc_admin');
+    });
+
+    if (toDelete.length === 0) {
+      return res.json({ success: true, deletedCount: 0, message: 'Không còn tài khoản demo nào trong hệ thống.' });
+    }
+
+    const deleteIds = new Set(toDelete.map(a => a.id));
+    dbData.accounts = dbData.accounts.filter(a => !deleteIds.has(a.id));
+    const deletedCount = toDelete.length;
+    saveDatabase(dbData);
+
+    addAuditLog('admin', adminName || 'GVCN', 'admin', 'Xóa tài khoản Demo', `Đã xóa sạch ${deletedCount} tài khoản demo mẫu (loptruong, to_truong, hocsinh...)`);
+    res.json({ 
+      success: true, 
+      deletedCount, 
+      deletedUsernames: toDelete.map(a => a.username),
+      message: `Đã xóa thành công ${deletedCount} tài khoản demo mẫu.` 
+    });
   });
 
   app.put('/api/accounts/:id/toggle-lock', (req: Request, res: Response) => {

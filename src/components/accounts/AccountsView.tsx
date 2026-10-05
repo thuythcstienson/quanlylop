@@ -10,6 +10,8 @@ import {
   Unlock, 
   History, 
   PlusCircle, 
+  UserPlus,
+  Trash2,
   X, 
   Check, 
   AlertCircle,
@@ -33,7 +35,7 @@ interface AccountsViewProps {
 }
 
 export const AccountsView: React.FC<AccountsViewProps> = ({ initialTab = 'accounts' }) => {
-  const { data, currentUser, addAccount, toggleLockAccount, changePassword, openConfirm, showToast, hasPermission } = useApp();
+  const { data, currentUser, addAccount, toggleLockAccount, deleteAccount, deleteDemoAccounts, changePassword, openConfirm, showToast, hasPermission } = useApp();
 
   const [activeTab, setActiveTab] = useState<'accounts' | 'audit_log' | 'access_history'>(initialTab);
 
@@ -297,6 +299,56 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ initialTab = 'accoun
       {/* TAB 1: ACCOUNTS LIST */}
       {activeTab === 'accounts' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          {/* Header Action Bar */}
+          <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Danh Sách Tài Khoản Người Dùng</h3>
+              <p className="text-xs text-slate-500">Quản lý tài khoản Ban cán sự lớp, Tổ trưởng, Học sinh & Phụ huynh</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {currentUser.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    openConfirm({
+                      title: 'Xóa các tài khoản demo mẫu?',
+                      message: 'Hệ thống sẽ xóa tất cả các tài khoản demo mẫu (loptruong, loppho, totruong1..4, hocsinh, phuhuynh) và chỉ giữ lại tài khoản GVCN cùng các tài khoản do bạn tự lập.',
+                      confirmText: 'Xóa tài khoản demo',
+                      isDestructive: true,
+                      onConfirm: deleteDemoAccounts,
+                    });
+                  }}
+                  className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  title="Xóa nhanh các tài khoản demo mẫu"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Xóa tài khoản Demo</span>
+                </button>
+              )}
+
+              {currentUser.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => setIsPermissionsModalOpen(true)}
+                  className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Phân Quyền Chi Tiết</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(true)}
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>+ Thêm Tài Khoản</span>
+              </button>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
@@ -413,6 +465,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ initialTab = 'accoun
                             title={acc.isLocked ? 'Mở khóa' : 'Khóa tài khoản'}
                           >
                             {acc.isLocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              openConfirm({
+                                title: `Xóa tài khoản @${acc.username}?`,
+                                message: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${acc.displayName}" (@${acc.username})? Thao tác này không thể hoàn tác.`,
+                                confirmText: 'Xóa tài khoản',
+                                isDestructive: true,
+                                onConfirm: () => deleteAccount(acc.id),
+                              });
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Xóa vĩnh viễn tài khoản này"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ) : (

@@ -122,7 +122,7 @@ export const CampaignsView: React.FC = () => {
   const [formType, setFormType] = useState<CampaignType>('cuoc_thi');
   const [formStartDate, setFormStartDate] = useState(toISODateString(new Date()));
   const [formEndDate, setFormEndDate] = useState(toISODateString(new Date(Date.now() + 7 * 86400000)));
-  const [formWeekNumber, setFormWeekNumber] = useState(data.config.currentWeek || 4);
+  const [formWeekNumber, setFormWeekNumber] = useState(data.config.currentWeek || 5);
   const [formRewardPoints, setFormRewardPoints] = useState<number>(2);
   const [formBonusPoints, setFormBonusPoints] = useState<number>(3);
   const [formLatePenalty, setFormLatePenalty] = useState<number>(1);
@@ -270,7 +270,7 @@ export const CampaignsView: React.FC = () => {
     setFormType(typeToSet);
     setFormStartDate(toISODateString(new Date()));
     setFormEndDate(toISODateString(new Date(Date.now() + 7 * 86400000)));
-    setFormWeekNumber(data.config.currentWeek || 4);
+    setFormWeekNumber(data.config.currentWeek || 5);
     setFormRewardPoints(2);
     setFormBonusPoints(3);
     setFormLatePenalty(1);
@@ -286,7 +286,7 @@ export const CampaignsView: React.FC = () => {
     setFormType(c.type);
     setFormStartDate(c.startDate);
     setFormEndDate(c.endDate);
-    setFormWeekNumber(c.weekNumber || data.config.currentWeek || 4);
+    setFormWeekNumber(c.weekNumber || data.config.currentWeek || 5);
     setFormRewardPoints(c.rewardPoints);
     setFormBonusPoints(c.bonusPoints);
     setFormLatePenalty(c.latePenaltyPoints);
